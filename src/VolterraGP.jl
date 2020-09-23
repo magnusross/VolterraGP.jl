@@ -5,7 +5,9 @@ module VolterraGP
 	using Distributions
 	using Plots
 
-	export init_G_pars, GP_posterior, GP_log_likelihood, kernel, GGu_cov
+	export Data
+	export GaussianProcess
+	export negloglikelihood, posterior1D, threeEQs  
 	include("gp.jl")
 	include("GGu.jl")
 	include("volterra.jl")
