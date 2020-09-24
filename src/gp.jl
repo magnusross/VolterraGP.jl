@@ -13,8 +13,8 @@ end
 
 mutable struct GaussianProcess
     base_kernel::Function
-    C::Int64 
     D::Int64
+    C::Int64 
     P::Int64
 
     data::Union{Data,Missing} 
@@ -26,15 +26,15 @@ mutable struct GaussianProcess
     dpars::Union{DiffableParameters,Missing}
 end
 
-GaussianProcess(base_kernel, C, D, P ) = GaussianProcess(base_kernel, C, D, P, missing, missing, missing, init_dpars(C, D, P))
-GaussianProcess(base_kernel, C, D, P, data ) = GaussianProcess(base_kernel, C, D, P, data , missing, missing, init_dpars(C, D, P))
-GaussianProcess(base_kernel, C, D, P, data, dpars) = GaussianProcess(base_kernel, C, D, P, data , missing, missing, dpars )
+GaussianProcess(base_kernel, D, C, P ) = GaussianProcess(base_kernel, D, C, P, missing, missing, missing, init_dpars(D, C, P))
+GaussianProcess(base_kernel, D, C, P, data ) = GaussianProcess(base_kernel, D, C, P, data , missing, missing, init_dpars(D, C, P))
+GaussianProcess(base_kernel, D, C, P, data, dpars) = GaussianProcess(base_kernel, D, C, P, data , missing, missing, dpars )
 
 
 
 
-function init_dpars(C, D, P)
-    G = rand(Float64, (D, sum(1:C + 1), P))
+function init_dpars(D, C, P)
+    G = rand(Float64, (D, sum(1:C), P))
     DiffableParameters([0.1], G, [0.1])
 end
 
@@ -48,7 +48,6 @@ function fill_K(t, tp, gp::GaussianProcess)
 end 
 
 
-# ╔═╡ d63d349e-f8e3-11ea-2779-4bc400527671
 function fill_sub_μ(t, d, gp::GaussianProcess)
 	map.(ti -> full_E(ti, d, gp), t)
 end
@@ -58,7 +57,7 @@ function fill_μ(t, gp::GaussianProcess)
 end
 
 
-function posterior1D(t, gp::GaussianProcess; jitter=1e-8)
+function posterior1D(t, gp::GaussianProcess; jitter=1e-5)
     Koo = fill_sub_K(gp.data.X, gp.data.X, 1, 1, gp) + gp.dpars.σ[1]^2*I
     Kop = fill_sub_K(gp.data.X, t, 1, 1, gp)
     Kpp = fill_sub_K(t, t, 1, 1, gp)

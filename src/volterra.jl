@@ -1,6 +1,6 @@
 
 @views function get_phi_E(t, c, d, gp::GaussianProcess)
-	i_low = sum(1:c)
+	i_low = sum(1:c-1)
 	i_high = i_low + c
 	
 	G_pars_sub = gp.dpars.G[d, i_low+1:i_high, :]
@@ -10,10 +10,10 @@
 end 
 
 @views function get_phi_cov(t, tp, c, cp, d, dp, gp::GaussianProcess)
-	i_low = sum(1:c)
+	i_low = sum(1:c-1)
 	i_high = i_low + c
 	
-	ip_low = sum(1:cp)
+	ip_low = sum(1:cp-1)
 	ip_high = ip_low + cp 
 	
 	G_pars_sub = [gp.dpars.G[d, i_low+1:i_high, :] ; gp.dpars.G[dp, ip_low+1:ip_high, :]]
