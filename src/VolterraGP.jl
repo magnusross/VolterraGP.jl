@@ -7,10 +7,11 @@ module VolterraGP
 
 	export Data
 	export GaussianProcess, DiffableParameters
-	export negloglikelihood, posterior1D, threeEQs  
+	export negloglikelihood, posterior1D, threeEQs, plotgp  
 	include("gp.jl")
 	include("GGu.jl")
 	include("volterra.jl")
+	include("plot.jl")
 end
 
 
