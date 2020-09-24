@@ -6,7 +6,7 @@ module VolterraGP
 	using Plots
 
 	export Data
-	export GaussianProcess
+	export GaussianProcess, DiffableParameters
 	export negloglikelihood, posterior1D, threeEQs  
 	include("gp.jl")
 	include("GGu.jl")

@@ -1,5 +1,6 @@
 
-@views function get_phi_E(t, c, d, gp::GaussianProcess)
+@views function get_phi_E(t::Float64, c::Int64, d::Int64,
+						 gp::GaussianProcess)::Array{Float64, 2}
 	i_low = sum(1:c-1)
 	i_high = i_low + c
 	
@@ -9,7 +10,8 @@
 					G_pars_sub)), G_pars_sub)...)
 end 
 
-@views function get_phi_cov(t, tp, c, cp, d, dp, gp::GaussianProcess)
+@views function get_phi_cov(t::Float64, tp::Float64, c::Int64, cp::Int64, 
+							d::Int64, dp::Int64, gp::GaussianProcess)::Array{Float64, 2}
 	i_low = sum(1:c-1)
 	i_high = i_low + c
 	
@@ -26,7 +28,7 @@ calculates the expectation of products of Gaussian RVs, with
 exponents s and covariance matrix phi, using the identity in proposition 1
 of Kan 2008.
 """
-function kan_rv_prod(phi::Array{Float64, 2}, s::Array{Int64, 1})
+function kan_rv_prod(phi::Array{Float64, 2}, s::Array{Int64, 1})::Float64
 	
 	st = sum(s)
 	prods = map(x -> 0:x, s)
@@ -42,7 +44,7 @@ function kan_rv_prod(phi::Array{Float64, 2}, s::Array{Int64, 1})
 	E /= factorial(st ÷ 2)
 end
 
-function full_E(t, d, gp::GaussianProcess)
+function full_E(t::Float64, d::Int64, gp::GaussianProcess)::Float64
 	val = 0
 	for c in 1:gp.C
 		if c % 2 == 0
@@ -54,7 +56,7 @@ function full_E(t, d, gp::GaussianProcess)
 	val 
 end 
 
-function full_cov(t, tp, d, dp, gp::GaussianProcess)
+function full_cov(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProcess)::Float64
 	val = 0
     for c in 1:gp.C
 		for cp in 1:gp.C
@@ -68,7 +70,7 @@ function full_cov(t, tp, d, dp, gp::GaussianProcess)
 	val 
 end 
 
-function kernel(t, tp, d, dp, gp::GaussianProcess)
+function kernel(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProcess)::Float64
 	cov = full_cov(t, tp, d, dp, gp)
     E = full_E(t, d, gp)
 	Ep = full_E(tp, dp, gp)
