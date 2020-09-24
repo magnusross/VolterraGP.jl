@@ -1,40 +1,84 @@
-function init_G_pars(D, C, P)
-	rand(Float64, (D, sum(1:C+1), P))
+const MissingOrArrF64 = Union{Missing,Array{Float64}}
+struct Data 
+    X::Array{Float64}
+    Y::Array{Float64}
 end
 
-function K_from_kernel(t, tp, kernel, pars)
-	cat(map.((tpi -> map.(ti -> kernel(ti, tpi, pars...), t)), tp)..., dims=2)
-end
-
-# ╔═╡ d63d349e-f8e3-11ea-2779-4bc400527671
-function μ_from_full_E(t, pars)
-	map.(ti -> full_E(ti, pars...), t)
-end
-
-# ╔═╡ 0c6b16b6-f994-11ea-1edb-3b62ddf90604
-function GP_posterior(t_obs, y_obs, t_pred, noise, kernel, pars)
-	Koo = K_from_kernel(t_obs, t_obs, kernel, pars) + noise[1]^2*I
-	Kop = K_from_kernel(t_obs, t_pred, kernel, pars)
-	Kpp = K_from_kernel(t_pred, t_pred, kernel, pars) + 1e-8*I
-	
-	μo = μ_from_full_E(t_obs, pars)
-	μp = μ_from_full_E(t_pred, pars) 
-	
-	Loo = cholesky(Koo).L 
-
-	μ_post = μp + Kop'*(Loo'\(Loo\(y_obs - μo)))
-	
-	Lop = Loo\Kop
-	K_post = Kpp - Lop'*Lop
-	
-	(μ_post, K_post)
+struct DiffableParameters
+    σ::Array{Float64,1}
+    G::Array{Float64,3}
+    u::Array{Float64,1}
 end
 
 
-# ╔═╡ ece25e0e-f997-11ea-38c4-5ba3e323afe5
-function GP_log_likelihood(t_obs, y_obs, noise, kernel, pars)
-	K = K_from_kernel(t_obs, t_obs, kernel, pars)
-	μ = μ_from_full_E(t_obs, pars)
-	Kp = K + noise[1].^2*I
-	0.5 * ( y_obs'*inv(Kp)*y_obs + log(det(Kp)) + size(y_obs)[1]*log(2*π))
+mutable struct GaussianProcess
+    base_kernel::Function
+    D::Int64
+    C::Int64 
+    P::Int64
+
+    data::Union{Data,Missing} 
+
+    μ::Union{Array{Float64,1},Missing}
+    K::Union{Array{Float64,2},Missing}
+    
+    
+    dpars::Union{DiffableParameters,Missing}
+end
+
+GaussianProcess(base_kernel, D, C, P ) = GaussianProcess(base_kernel, D, C, P, missing, missing, missing, init_dpars(D, C, P))
+GaussianProcess(base_kernel, D, C, P, data ) = GaussianProcess(base_kernel, D, C, P, data , missing, missing, init_dpars(D, C, P))
+GaussianProcess(base_kernel, D, C, P, data, dpars) = GaussianProcess(base_kernel, D, C, P, data , missing, missing, dpars )
+
+
+
+
+function init_dpars(D, C, P)
+    G = rand(Float64, (D, sum(1:C), P))
+    DiffableParameters([0.1], G, [0.1])
+end
+
+
+function fill_sub_K(t, tp, d, dp, gp::GaussianProcess)
+	cat(map.((tpi -> map.(ti -> kernel(ti, tpi, d, dp, gp), t)), tp)..., dims=2)
+end
+
+function fill_K(t, tp, gp::GaussianProcess)
+    gp.K = cat(map.((dpi -> map.(di -> fill_sub_K(t, tp, di, dpi, gp), 1:gp.D)), 1:gp.D)..., dims=2)
+end 
+
+
+function fill_sub_μ(t, d, gp::GaussianProcess)
+	map.(ti -> full_E(ti, d, gp), t)
+end
+
+function fill_μ(t, gp::GaussianProcess)
+    gp.μ = cat(map.(di -> fill_sub_μ(t, di, gp), 1:gp.D), dims=1)
+end
+
+
+function posterior1D(t, gp::GaussianProcess; jitter=1e-5)
+    Koo = fill_sub_K(gp.data.X, gp.data.X, 1, 1, gp) + gp.dpars.σ[1]^2*I
+    Kop = fill_sub_K(gp.data.X, t, 1, 1, gp)
+    Kpp = fill_sub_K(t, t, 1, 1, gp)
+
+    μo = fill_sub_μ(gp.data.X, 1, gp)
+    μp = fill_sub_μ(t, 1, gp)
+
+    Loo = cholesky(Koo).L 
+
+	μ_post = μp + Kop' * (Loo' \ (Loo \ (gp.data.Y - μo)))
+	
+	Lop = Loo \ Kop
+	K_post = Kpp - Lop' * Lop
+	
+	(μ_post, K_post) 
+end
+
+function negloglikelihood(gp::GaussianProcess)
+    K = fill_sub_K(gp.data.X, gp.data.X, 1, 1, gp) + gp.dpars.σ[1]^2*I
+    μ = fill_sub_μ(gp.data.X, 1, gp)
+
+    Kp = K + gp.dpars.σ[1].^2 * I
+	0.5 * ( gp.data.Y' * inv(Kp) * gp.data.Y + log(det(Kp)) + size(gp.data.Y)[1] * log(2 * π))
 end
