@@ -36,21 +36,29 @@ end
 
 
 function fill_sub_K(t::Array{Float64}, tp::Array{Float64}, d::Int64, dp::Int64, gp::GaussianProcess)::Array{Float64, 2}
-	cat(map.((tpi -> map.(ti -> kernel(ti, tpi, d, dp, gp), t)), tp)..., dims=2)
+    cat(map.((tpi -> 
+            map.(ti ->
+                kernel(ti, tpi, d, dp, gp), 
+            t)), 
+        tp)..., dims=2)
 end
 
-# function fill_K(t::Array{Float64}, tp::Array{Float64}, gp::GaussianProcess)::Array{Float64, 2}
-#     gp.K = cat(map.((dpi -> map.(di -> fill_sub_K(t, tp, di, dpi, gp), 1:gp.D)), 1:gp.D)..., dims=2)
-# end 
+function fill_K(t::Array{Float64}, tp::Array{Float64}, gp::GaussianProcess)
+    vcat(map.(dpi -> 
+            hcat(map.(di -> 
+                fill_sub_K(t, tp, di, dpi, gp), 
+            1:gp.D)...), 
+        1:gp.D)...)
+end 
 
 
 function fill_sub_μ(t::Array{Float64}, d::Int64, gp::GaussianProcess)::Array{Float64, 1}
 	map.(ti -> full_E(ti, d, gp), t)
 end
 
-# function fill_μ(t::Array{Float64}, gp::GaussianProcess)::Array{Float64, 1}
-#     gp.μ = cat(map.(di -> fill_sub_μ(t, di, gp), 1:gp.D), dims=1)
-# end
+function fill_μ(t::Array{Float64}, gp::GaussianProcess)::Array{Float64, 1}
+    vcat(map.(di -> fill_sub_μ(t, di, gp), 1:gp.D)...)
+end
 
 
 function posterior1D(t::Array{Float64}, gp::GaussianProcess; jitter=1e-5)::Tuple{Array{Float64,1},Array{Float64, 2}}

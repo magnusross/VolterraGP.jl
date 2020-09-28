@@ -1,4 +1,3 @@
-
 @views function get_phi_E(t::Float64, c::Int64, d::Int64,
 						 gp::GaussianProcess)::Array{Float64, 2}
 	i_low = sum(1:c-1)
@@ -6,8 +5,11 @@
 	
 	G_pars_sub = gp.dpars.G[d, i_low+1:i_high, :]
 	
-	hcat(map.((pi -> map.(ppi -> gp.base_kernel(t, t, pi, ppi, gp.dpars.u), 
-					G_pars_sub)), G_pars_sub)...)
+	hcat(map.((pi -> 
+			map.(ppi -> 
+				gp.base_kernel(t, t, pi, ppi, gp.dpars.u), 
+			G_pars_sub)),
+		G_pars_sub)...)
 end 
 
 @views function get_phi_cov(t::Float64, tp::Float64, c::Int64, cp::Int64, 
@@ -18,11 +20,13 @@ end
 	ip_low = sum(1:cp-1)
 	ip_high = ip_low + cp 
 
-	ir = [i_low+1:i_high; ip_low+1:ip_high]
-
 	G_pars_sub = [gp.dpars.G[d, i_low+1:i_high, :] ; gp.dpars.G[dp, ip_low+1:ip_high, :]]
-	cat(map.((pi -> map.(ppi -> gp.base_kernel(t, tp, pi, ppi, gp.dpars.u), 
-					G_pars_sub)), G_pars_sub)..., dims=2)
+	
+	cat(map.((pi -> 
+			map.(ppi -> 
+				gp.base_kernel(t, tp, pi, ppi, gp.dpars.u), 
+			G_pars_sub)), 
+		G_pars_sub)..., dims=2)
  end 
 
 function kan_rv_prod_inner(phi::Array{Float64, 2}, s::Array{Int64, 1}, v::NTuple, st::Int64)
