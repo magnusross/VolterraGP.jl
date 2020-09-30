@@ -6,7 +6,7 @@ using LinearAlgebra
 
 
 D = 2
-C = 1
+C = 2
 P = 1
 
 # initialise
@@ -34,8 +34,8 @@ gp = GaussianProcess(threeEQs, D, C, P, data)
 
 
 
-opt = Flux.ADAM(0.1)
-its = 20
+opt = Flux.ADAM(0.01)
+its = 10
 
 # train
 for i in 1:its
@@ -50,7 +50,8 @@ for i in 1:its
 end 
 
 p = VolterraGP.posterior(t, gp)
-μ_arr = reshape(p[1], (size(t)[1], D))
-plot(t, μ_arr , layout=(2, 1))
-scatter!(X, hcat(data.Y...) , layout=(2,1))
+# μ_arr = reshape(p[1], (size(t)[1], D))
+# plot(t, μ_arr , layout=(2, 1))
+# scatter!(X, hcat(data.Y...) , layout=(2,1))
 
+plotgp(t, gp)

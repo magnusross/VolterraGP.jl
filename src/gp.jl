@@ -36,19 +36,22 @@ end
 
 
 function fill_sub_K(t::Array{Float64}, tp::Array{Float64}, d::Int64, dp::Int64, gp::GaussianProcess)::Array{Float64,2}
-    cat(map.((tpi -> 
+    reduce(hcat,
+        map.((tpi -> 
             map.(ti ->
                 kernel(ti, tpi, d, dp, gp), 
             t)), 
-        tp)..., dims=2)
+        tp))
 end
 
 function fill_K(t::Array{Float64}, tp::Array{Float64}, gp::GaussianProcess)
-    vcat(map.(dpi -> 
-            hcat(map.(di -> 
-                fill_sub_K(t, tp, di, dpi, gp), 
-            1:gp.D)...), 
-        1:gp.D)...)
+    reduce(vcat,
+        map.(dpi -> 
+            reduce(hcat, 
+                map.(di -> 
+                    fill_sub_K(t, tp, di, dpi, gp), 
+                 1:gp.D)), 
+        1:gp.D))
 end 
 
 
@@ -57,17 +60,21 @@ function fill_sub_μ(t::Array{Float64}, d::Int64, gp::GaussianProcess)::Array{Fl
 end
 
 function fill_μ(t::Array{Float64}, gp::GaussianProcess)::Array{Float64,1}
-    vcat(map.(di -> fill_sub_μ(t, di, gp), 1:gp.D)...)
+    reduce(vcat, map.(di -> fill_sub_μ(t, di, gp), 1:gp.D))
 end
 
 
 function posterior(t::Array{Float64}, gp::GaussianProcess; jitter=1e-5)::Tuple{Array{Float64,1},Array{Float64,2}}
     Σ = Diagonal(vcat([gp.dpars.σ[i] * ones(size(gp.data.X)[1]) for i in 1:gp.D]...))
 
-    Koo = fill_K(gp.data.X, gp.data.X, gp) + Σ   # gp.dpars.σ[1]^2 * I 
+    Koo = fill_K(gp.data.X, gp.data.X, gp) + Σ   + jitter * I
     Kop = fill_K(gp.data.X, t, gp)
-    Kpp = fill_K(t, t, gp)  
+    Kpp = fill_K(t, t, gp)
 
+    # print(minimum(eigvals(Koo)), minimum(eigvals(Kpp)), minimum(eigvals(Kpp)))
+    # print(sort(eigvals(Koo)))
+    # print("\n\n", maximum(Koo' - Koo))
+    
     μo = fill_μ(gp.data.X, gp)
     μp = fill_μ(t, gp)
 
@@ -76,7 +83,7 @@ function posterior(t::Array{Float64}, gp::GaussianProcess; jitter=1e-5)::Tuple{A
     Loo = cholesky(Koo).L
     
     μ_post = μp + Kop' * (Loo' \ (Loo \ (y - μo)))
-	# μ_post = Kop' * inv(Koo) * y
+
 	Lop = Loo \ Kop
 	K_post = Kpp - Lop' * Lop
 	
@@ -85,7 +92,7 @@ end
 
 
 
-function negloglikelihood(gp::GaussianProcess; jitter=1e-5)::Float64
+function negloglikelihood(gp::GaussianProcess; jitter=1e-4)::Float64
     Σ = Diagonal(vcat([gp.dpars.σ[i] * ones(size(gp.data.X)[1]) for i in 1:gp.D]...))
 
     K = fill_K(gp.data.X, gp.data.X, gp) + Σ + jitter * I

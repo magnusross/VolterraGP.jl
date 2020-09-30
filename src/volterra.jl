@@ -5,11 +5,10 @@
 	
 	G_pars_sub = gp.dpars.G[d, i_low+1:i_high, :]
 	
-	hcat(map.((pi -> 
-			map.(ppi -> 
-				gp.base_kernel(t, t, pi, ppi, gp.dpars.u), 
-			G_pars_sub)),
-		G_pars_sub)...)
+	reduce(hcat, 
+				[[gp.base_kernel(t, t, pi, ppi, gp.dpars.u)
+			for ppi in G_pars_sub]
+		for	pi in G_pars_sub])
 end 
 
 @views function get_phi_cov(t::Float64, tp::Float64, c::Int64, cp::Int64, 
@@ -22,38 +21,34 @@ end
 
 	G_pars_sub = [gp.dpars.G[d, i_low+1:i_high, :] ; gp.dpars.G[dp, ip_low+1:ip_high, :]]
 	
-	cat(map.((pi -> 
-			map.(ppi -> 
-				gp.base_kernel(t, tp, pi, ppi, gp.dpars.u), 
-			G_pars_sub)), 
-		G_pars_sub)..., dims=2)
+	reduce(hcat, 
+				[[gp.base_kernel(t, tp, pi, ppi, gp.dpars.u)
+			for ppi in G_pars_sub]
+		for	pi in G_pars_sub])
  end 
 
-function kan_rv_prod_inner(phi::Array{Float64, 2}, s::Array{Int64, 1}, v::NTuple, st::Int64)
+function kan_rv_prod_inner(phi::Array{Float64, 2}, v::NTuple)
 	vl = collect(v)
-	h = s/2 - vl
-	coeff = (-1.0)^(sum(vl)) * mapreduce(binomial, *, s, vl)
-	hKh =  ( 0.5 * h' * phi * h)^(st / 2)
-	coeff * hKh
+	h = 0.5 .- vl
+	hKh =  ( 0.5 * dot(h, phi*h))^(size(phi)[1] / 2)
+	(-1.0)^(sum(vl)) * hKh 
 end 
 """
 calculates the expectation of products of Gaussian RVs, with
 exponents s and covariance matrix phi, using the identity in proposition 1
 of Kan 2008.
 """
-function kan_rv_prod(phi::Array{Float64, 2}, s::Array{Int64, 1})::Float64
-	st = sum(s)
-	prods = map(x -> 0:x, s)
-	mapreduce(v -> kan_rv_prod_inner(phi, s, v, st), +, Iterators.product(prods...)) / factorial(st ÷ 2)
+function kan_rv_prod(phi::Array{Float64, 2})::Float64
+	st = size(phi)[1]
+	mapreduce(v -> kan_rv_prod_inner(phi, v), +, Iterators.product(fill(0:1, st)...)) / factorial(st ÷ 2)
 end
 
 function full_E(t::Float64, d::Int64, gp::GaussianProcess)::Float64
 	val = 0.
 	for c in 1:gp.C
 		if c % 2 == 0
-			s = ones(Int64, c)
             phi = get_phi_E(t, c, d, gp)
-			val += kan_rv_prod(phi, s)
+			val += kan_rv_prod(phi)
 		end
 	end
 	val 
@@ -64,9 +59,8 @@ function full_cov(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProc
     for c in 1:gp.C
 		for cp in 1:gp.C
 			if (c + cp) % 2 == 0
-				s = ones(Int64, c + cp)
                 K = get_phi_cov(t, tp, c, cp, d, dp, gp)
-				val += kan_rv_prod(K, s)
+				val += kan_rv_prod(K)
 			end 
 		end 
 	end 

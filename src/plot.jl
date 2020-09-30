@@ -1,19 +1,25 @@
-function plotgp(t::Array{Float64}, gp::GaussianProcess; N=50, jitter=1e-8)
-    μ, K = posterior1D(t, gp)
-    dist = MvNormal(μ, K+jitter*I)
+"""
+only works when t's all the same for outputs 
+"""
+function plotgp(t::Array{Float64}, gp::GaussianProcess; N=50, jitter=1e-5)
 
-    x = ones((size(t)[1], N))
-    for i in 1:N
-        x[:, i] = rand(dist)
-    end 
+    rs = x -> reshape(x, (size(t)[1], gp.D))
 
-    plot(t, x, linealpha=0.2, lc="blue", legend=false)
-    plot!(t, μ)
-    plot!(t, μ+2*sqrt.(diag(K)), lc="red")
-    plot!(t, μ-2*sqrt.(diag(K)), lc="red")
-    scatter!(gp.data.X, gp.data.Y, 
-        markershape = :x,
+    μ, K = posterior(t, gp)
+    print(minimum(eigvals(K + I)))
+    # dist = MvNormal(μ, K + I)
+    μ_arr = rs(μ)
+    K_arr = rs(sqrt.(diag(K)))
+
+
+    plot(t, μ_arr, layout=(gp.D, 1), legend=false)
+    plot!(t, μ_arr + 2 * K_arr, lc="red", layout=(1, gp.D))
+    plot!(t, μ_arr - 2 * K_arr, lc="red", layout=(1, gp.D))
+    scatter!(gp.data.X, hcat(gp.data.Y...),
+        layout=(1, gp.D), 
+        markershape=:x,
         markercolor="yellow",
         markersize=5,
-        markerstrokewidth = 100)
+        markerstrokewidth=100)
 end 
+
