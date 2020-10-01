@@ -43,9 +43,15 @@ function kan_rv_prod(phi::Array{Float64, 2})::Float64
 	mapreduce(v -> kan_rv_prod_inner(phi, v), +, Iterators.product(fill(0:1, st)...)) / factorial(st ÷ 2)
 end
 
-# function kan_rv_prod_adj(Δ, phi)
-# 	g = Δ * gradient(kan_rv_prod_inner, )
-# end
+function kan_rv_prod_adj(phi)
+    st = size(phi)[1]
+    g = v -> gradient(kan_rv_prod_inner, phi, v)[1]
+	sum(g, Iterators.product(fill(0:1, st)...)) / factorial(st ÷ 2)
+end
+
+@adjoint function kan_rv_prod(phi)
+    kan_rv_prod(phi), x -> (x * kan_rv_prod_adj(phi),)
+end
 
 
 function full_E(t::Float64, d::Int64, gp::GaussianProcess)::Float64

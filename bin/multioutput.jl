@@ -10,7 +10,7 @@ C = 2
 P = 1
 
 # initialise
-X = collect(Float64, -5:1.:5)
+X = collect(Float64, -5:.1:5)
 Y = fill(Float64[], D)
 
 t = collect(Float64, -20:0.3:20)

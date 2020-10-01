@@ -5,6 +5,7 @@ module VolterraGP
 	using Distributions
 	using Plots
 	using Flux
+	using Flux:@adjoint
 
 	export Data
 	export GaussianProcess, DiffableParameters
