@@ -10,14 +10,14 @@ C = 2
 P = 1
 
 # initialise
-X = collect(Float64, -5:.1:5)
+X = collect(Float64, -5:1.:5)
 Y = fill(Float64[], D)
 
 t = collect(Float64, -20:0.3:20)
 
 
 for i = 1:D
-    Y[i] = i * sin.(X) +  (i-1)*0.1 * randn(size(X)[1])
+    Y[i] = i * sin.(X) +  (i-1)*0.5 * randn(size(X)[1])
 end 
 
 
@@ -34,10 +34,12 @@ gp = GaussianProcess(threeEQs, D, C, P, data)
 
 
 
-opt = Flux.ADAM(0.01)
-its = 10
+opt = Flux.ADAM(0.05)
+its = 30
 
 # train
+
+plotgp(t, gp)
 for i in 1:its
         grads = gradient(Flux.params(gp.dpars.σ, gp.dpars.G, gp.dpars.u)) do
                             negloglikelihood(gp)
@@ -49,6 +51,7 @@ for i in 1:its
 
 end 
 
+K = VolterraGP.fill_K(gp.data.X, gp.data.X, gp)
 p = VolterraGP.posterior(t, gp)
 # μ_arr = reshape(p[1], (size(t)[1], D))
 # plot(t, μ_arr , layout=(2, 1))

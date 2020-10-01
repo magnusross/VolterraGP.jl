@@ -6,7 +6,6 @@ function plotgp(t::Array{Float64}, gp::GaussianProcess; N=50, jitter=1e-5)
     rs = x -> reshape(x, (size(t)[1], gp.D))
 
     μ, K = posterior(t, gp)
-    print(minimum(eigvals(K + I)))
     # dist = MvNormal(μ, K + I)
     μ_arr = rs(μ)
     K_arr = rs(sqrt.(diag(K)))
