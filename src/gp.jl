@@ -108,13 +108,14 @@ function negloglikelihood(gp::GaussianProcess; jitter=1e-6)::Float64
     Σ = Diagonal(vcat([gp.dpars.σ[i]^2 * ones(size(gp.data.X)[1]) for i in 1:gp.D]...))
 
     K = fill_K(gp.data.X, gp.data.X, gp) + Σ + jitter * I
+    print(det(K))
 
     μ = fill_μ(gp.data.X, gp)
     
 
     y = vcat(gp.data.Y...)
 
-	0.5 * ( (y - μ)' * inv(K) * (y - μ) + logdet(K) + size(y)[1] * log(2 * π))
+	0.5 * ( (y - μ)' * inv(K) * (y - μ) + log(det(K)) + size(y)[1] * log(2 * π))
 end
 
 # function posterior1D(t::Array{Float64}, gp::GaussianProcess; jitter=1e-5)::Tuple{Array{Float64,1},Array{Float64,2}}
