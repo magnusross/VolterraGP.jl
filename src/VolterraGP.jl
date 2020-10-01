@@ -4,6 +4,7 @@ module VolterraGP
 	using Random
 	using Distributions
 	using Plots
+	using Flux
 
 	export Data
 	export GaussianProcess, DiffableParameters
