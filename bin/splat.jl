@@ -23,4 +23,8 @@ data = Data(X, Y)
 dpars = DiffableParameters([0.1, 0.1], ones(Float64, (D, sum(1:C), P)), [0.1])
 gp = GaussianProcess(threeEQs, D, C, P, data, dpars) 
 
-@btime negloglikelihood(gp)
+# @btime negloglikelihood(gp)
+
+# @btime gradient(Flux.params(gp.dpars.σ, gp.dpars.G, gp.dpars.u)) do
+#     negloglikelihood(gp)
+# end
