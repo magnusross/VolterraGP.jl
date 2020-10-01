@@ -65,14 +65,14 @@ end
 
 
 function posterior(t::Array{Float64}, gp::GaussianProcess; jitter=1e-5)::Tuple{Array{Float64,1},Array{Float64,2}}
-    Σ = Diagonal(vcat([gp.dpars.σ[i] * ones(size(gp.data.X)[1]) for i in 1:gp.D]...))
+    Σ = Diagonal(vcat([gp.dpars.σ[i]^2 * ones(size(gp.data.X)[1]) for i in 1:gp.D]...))
 
     Koo = fill_K(gp.data.X, gp.data.X, gp) + Σ   + jitter * I
     Kop = fill_K(gp.data.X, t, gp)
     Kpp = fill_K(t, t, gp)
 
     # print(minimum(eigvals(Koo)), minimum(eigvals(Kpp)), minimum(eigvals(Kpp)))
-    # print(sort(eigvals(Koo)))
+    print(sort(eigvals(Koo)))
     # print("\n\n", maximum(Koo' - Koo))
     
     μo = fill_μ(gp.data.X, gp)
@@ -93,7 +93,7 @@ end
 
 
 function negloglikelihood(gp::GaussianProcess; jitter=1e-4)::Float64
-    Σ = Diagonal(vcat([gp.dpars.σ[i] * ones(size(gp.data.X)[1]) for i in 1:gp.D]...))
+    Σ = Diagonal(vcat([gp.dpars.σ[i]^2 * ones(size(gp.data.X)[1]) for i in 1:gp.D]...))
 
     K = fill_K(gp.data.X, gp.data.X, gp) + Σ + jitter * I
     μ = fill_μ(gp.data.X, gp)
