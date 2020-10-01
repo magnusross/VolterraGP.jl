@@ -17,7 +17,7 @@ t = collect(Float64, -20:0.3:20)
 
 
 for i = 1:D
-    Y[i] = i * sin.(X) +  (i-1)*0.1 * randn(size(X)[1])
+    Y[i] = 2*i * sin.(X) +  (i-1)*0.1 * randn(size(X)[1])
 end 
 
 
@@ -35,7 +35,7 @@ gp = GaussianProcess(threeEQs, D, C, P, data)
 
 
 opt = Flux.ADAM(0.01)
-its = 10
+its = 7
 
 # train
 for i in 1:its
@@ -49,7 +49,7 @@ for i in 1:its
 
 end 
 
-p = VolterraGP.posterior(t, gp)
+# p = VolterraGP.posterior(t, gp)
 # μ_arr = reshape(p[1], (size(t)[1], D))
 # plot(t, μ_arr , layout=(2, 1))
 # scatter!(X, hcat(data.Y...) , layout=(2,1))

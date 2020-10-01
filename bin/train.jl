@@ -2,7 +2,7 @@ using Revise
 using VolterraGP
 using Flux
 
-D = 1
+D = 2
 C = 2
 P = 1
 

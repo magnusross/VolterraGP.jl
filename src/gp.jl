@@ -31,7 +31,7 @@ GaussianProcess(base_kernel, D, C, P, data, dpars) = GaussianProcess(base_kernel
 
 function init_dpars(D::Int64, C::Int64, P::Int64)::DiffableParameters
     G = ones(Float64, (D, sum(1:C), P))
-    DiffableParameters(0.1 * ones(D), G, [0.1])
+    DiffableParameters(1. * ones(D), G, [0.1])
 end
 
 
@@ -67,7 +67,7 @@ end
 function posterior(t::Array{Float64}, gp::GaussianProcess; jitter=1e-5)::Tuple{Array{Float64,1},Array{Float64,2}}
     Σ = Diagonal(vcat([gp.dpars.σ[i] * ones(size(gp.data.X)[1]) for i in 1:gp.D]...))
 
-    Koo = fill_K(gp.data.X, gp.data.X, gp) + Σ   + jitter * I
+    Koo = fill_K(gp.data.X, gp.data.X, gp) + Σ  + jitter * I
     Kop = fill_K(gp.data.X, t, gp)
     Kpp = fill_K(t, t, gp)
 

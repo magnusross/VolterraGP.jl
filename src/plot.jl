@@ -18,7 +18,7 @@ function plotgp(t::Array{Float64}, gp::GaussianProcess; N=50, jitter=1e-5)
     scatter!(gp.data.X, hcat(gp.data.Y...),
         layout=(1, gp.D), 
         markershape=:x,
-        markercolor="yellow",
+        markercolor="green",
         markersize=5,
         markerstrokewidth=100)
 end 

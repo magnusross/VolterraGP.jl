@@ -9,7 +9,7 @@ D = 2
 C = 2
 P = 1
 
-X = collect(Float64, -5:1.:5)
+X = collect(Float64, -5:0.01:5)
 Y = fill(Float64[], D)
 
 t = collect(Float64, -20:0.3:20)
@@ -23,4 +23,4 @@ data = Data(X, Y)
 dpars = DiffableParameters([0.1, 0.1], ones(Float64, (D, sum(1:C), P)), [0.1])
 gp = GaussianProcess(threeEQs, D, C, P, data, dpars) 
 
-@btime negloglikelihood(gp)
+@time negloglikelihood(gp)
