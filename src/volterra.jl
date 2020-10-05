@@ -67,9 +67,8 @@ function kan_rv_prod_adj(phi::Array{Float64, 2})
 	sum(g, Iterators.product(fill(0:1, st)...)) / factorial(st ÷ 2)
 end
 
-"""
-see kan_rv_prod_adj
-"""
+
+
 @adjoint function kan_rv_prod(phi::Array{Float64, 2})
     kan_rv_prod(phi), x -> (x * kan_rv_prod_adj(phi),)
 end
