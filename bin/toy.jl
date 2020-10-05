@@ -2,30 +2,14 @@ using Revise
 using VolterraGP
 using Plots
 using Flux
+using LinearAlgebra
 
-D = 3
-C = 1
-P = 1
+D = 3 # number of outputs 
+C = 1 # order of volterra series 
+P = 1 # number of paramters in base kernel 
 
-train, test = generate_toy_data()
+train, test = generate_toy_data(30) # genrates toy data from paper 
+gp = GaussianProcess(threeEQs, D, C, P, train) 
 
-gp = GaussianProcess(threeEQs, D, C, P, train)
-
-opt = Flux.ADAM(0.05)
-its = 30
-
-# train
-negloglikelihood(gp)
-
-for i in 1:its
-        grads = gradient(Flux.params(gp.dpars.σ, gp.dpars.G, gp.dpars.u)) do
-                            negloglikelihood(gp)
-        end
-    for p in (gp.dpars.σ, gp.dpars.G, gp.dpars.u)
-      Flux.Optimise.update!(opt, p, grads[p])
-    end
-    # print("negloglike: ", negloglikelihood(gp), "\n")
-
-end 
-
-plotgp(test.X, gp)
+fit!(gp, 10, ls_lr=5e-3) # fails when ls_lr > 5e-3
+plotgp(test.X, gp) 

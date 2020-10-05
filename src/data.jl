@@ -1,7 +1,7 @@
 """
-Implements toy data from alvarez2019non
+Implements toy data from paper 
 """
-function generate_toy_data()
+function generate_toy_data(N_train=50)
 
     X = collect(0.005:0.005:1.)
     Y = fill(Float64[], 3)
@@ -23,8 +23,8 @@ function generate_toy_data()
     end
 
     mix = randperm(200)
-    mixte = sort(mix[1:50])
-    mixtr = sort(mix[50:end])
+    mixtr = sort(mix[1:N_train])
+    mixte = sort(mix[N_train:end])
 
     train_X = X[mixtr]
     test_X = X[mixte]

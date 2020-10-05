@@ -1,3 +1,7 @@
+"""
+calculated this by hand so may not be right,
+all kernels (both smoothing and base process) in EQ form, see eqn 2
+"""
 function threeEQs(t::Float64, tp::Float64, Gp1::Float64, Gp2::Float64, bp::Array{Float64,1})::Float64
 	a, b, c = Gp1, Gp2, bp[1]
 	coeff = 1. / (sqrt(2 * π * (a + b + c)^2))

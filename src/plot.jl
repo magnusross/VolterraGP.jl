@@ -8,17 +8,17 @@ function plotgp(t::Array{Float64}, gp::GaussianProcess; N=50, jitter=1e-5)
     μ, K = posterior(t, gp)
     # dist = MvNormal(μ, K + I)
     μ_arr = rs(μ)
-    K_arr = rs(sqrt.(diag(K)))
+    K_arr = rs(sqrt.(diag(K + jitter * I)))
 
 
-    plot(t, μ_arr, layout=(gp.D, 1), legend=false)
+    plot(t, μ_arr, legend=false, layout=gp.D)
     plot!(t, μ_arr + 2 * K_arr, lc="red", layout=(1, gp.D))
     plot!(t, μ_arr - 2 * K_arr, lc="red", layout=(1, gp.D))
     scatter!(gp.data.X, hcat(gp.data.Y...),
         layout=(1, gp.D), 
-        markershape=:x,
-        markercolor="yellow",
-        markersize=5,
-        markerstrokewidth=100)
+        markershape=:o,
+        markercolor="green",
+        markersize=2,
+        markerstrokewidth=0)
 end 
 

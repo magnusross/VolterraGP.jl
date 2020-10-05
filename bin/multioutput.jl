@@ -34,12 +34,11 @@ gp = GaussianProcess(threeEQs, D, C, P, data)
 
 
 
-opt = Flux.ADAM(0.05)
+opt = Flux.ADAM(0.1)
 its = 30
 
 # train
 
-plotgp(t, gp)
 for i in 1:its
         grads = gradient(Flux.params(gp.dpars.σ, gp.dpars.G, gp.dpars.u)) do
                             negloglikelihood(gp)
