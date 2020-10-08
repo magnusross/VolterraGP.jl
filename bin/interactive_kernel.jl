@@ -63,7 +63,7 @@ C=2 case, so 3 smoothing kerenels and one base kerenel, all of EQ form.
 
 # ╔═╡ 40b9b7fe-08b4-11eb-37bc-8ff804c302da
 begin
-	τ = collect(-5:0.1:5)
+	τ = collect(-10:0.1:10)
 	C = 2 
 	GparsC2 = reshape([g1, g2, g3], (1, 3, 1))
 	uparsC2 = [u]

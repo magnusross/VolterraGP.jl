@@ -80,7 +80,8 @@ function full_E(t::Float64, d::Int64, gp::GaussianProcess)::Float64
 	val = 0.
 	for c in 1:gp.C
 		if c % 2 == 0
-            phi = get_phi_E(t, c, d, gp)
+			phi = get_phi_E(t, c, d, gp)
+			println(kan_rv_prod(phi))
 			val += kan_rv_prod(phi)
 		end
 	end
@@ -95,8 +96,8 @@ function full_cov(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProc
     for c in 1:gp.C
 		for cp in 1:gp.C
 			if (c + cp) % 2 == 0
-                K = get_phi_cov(t, tp, c, cp, d, dp, gp)
-				val += kan_rv_prod(K)
+            	phi = get_phi_cov(t, tp, c, cp, d, dp, gp)
+				val += kan_rv_prod(phi)
 			end 
 		end 
 	end 
@@ -111,6 +112,9 @@ function kernel(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProces
 	cov = full_cov(t, tp, d, dp, gp)
     E = full_E(t, d, gp)
 	Ep = full_E(tp, dp, gp)
-	cov - E*Ep
+	# print("a")
+	println(cov, " ", E, " ", Ep)
+	# println(cov)
+	cov - E*Ep 
 end 	
 

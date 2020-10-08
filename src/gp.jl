@@ -33,20 +33,23 @@ GaussianProcess(base_kernel, D, C, P, data, dpars) = GaussianProcess(base_kernel
 initialise the differentiable paramters
 """
 function init_dpars(D::Int64, C::Int64, P::Int64)::DiffableParameters
-    G = 1. * ones(Float64, (D, sum(1:C), P))
-    DiffableParameters(0.001 * ones(D), G, [1.])
+    G = 0.1 .+ rand(Float64, (D, sum(1:C), P))
+    DiffableParameters(0.01 * rand(D), G, [.1])
 end
 
 """
 get K for one output 
 """
 function fill_sub_K(t::Array{Float64}, tp::Array{Float64}, d::Int64, dp::Int64, gp::GaussianProcess)::Array{Float64,2}
-    reduce(hcat,
+    K  = reduce(hcat,
         map.((tpi -> 
             map.(ti ->
                 kernel(ti, tpi, d, dp, gp), 
             t)), 
         tp))
+    # println(d, dp, " ", minimum(eigvals(K)))
+    # Matrix(Hermitian(K))
+    K
 end
 
 """
@@ -135,3 +138,5 @@ function negloglikelihood(gp::GaussianProcess; jitter=1e-5)::Float64
     dist = MvNormal(μ, K)
     -1 * logpdf(dist, y)
 end
+
+

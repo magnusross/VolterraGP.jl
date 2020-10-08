@@ -2,26 +2,31 @@ using VolterraGP
 using Test
 using BenchmarkTools
 
-D = 1
-C = 2 
+
 P = 1
 
-dpars = DiffableParameters([0.1], ones(Float64, (D, sum(1:C), P)), [0.1])
+dpars1 = DiffableParameters([0.1], ones(Float64, (1, sum(1:2), P)), [0.1])
 
 X = collect(-1:0.1:1)
 Y = [sin.(X)]
 data = Data(X, Y)
 
-gp = GaussianProcess(threeEQs, D, C, P, data, dpars)
+gp1 = GaussianProcess(threeEQs, 1, 2, P, data, dpars1)
 
+dpars2 = DiffableParameters([0.1], ones(Float64, (2, sum(1:1), P)), [0.1])
+gp2 = GaussianProcess(threeEQs, 2, 1, P, data, dpars2)
 
 @testset "VolterraGP.jl" begin
     # @test abs(negloglikelihood(gp) - (-11.65748958085625)) <=  eps()
 end
 
 @testset "volterra.jl" begin
-    @test kan_rv_prod(ones(4, 4)) == 1.
-    @test kan_rv_prod(ones(2, 2)) == 15.
+    # when C=1 running thru volterra should be same as base 
+    @test VolterraGP.kernel(1., 2., 1, 2, gp2) == threeEQs(1., 2., gp2.dpars.G[1, 1, 1], gp2.dpars.G[2, 1, 1], gp2.dpars.u)
+    @test VolterraGP.kernel(1., 2., 1, 1, gp2) == threeEQs(1., 2., gp2.dpars.G[1, 1, 1], gp2.dpars.G[1, 1, 1], gp2.dpars.u)
+
+    @test VolterraGP.kan_rv_prod(ones(4, 4)) == 3.
+    @test VolterraGP.kan_rv_prod(ones(2, 2)) == 1.
 end
 
 @testset "speed" begin
