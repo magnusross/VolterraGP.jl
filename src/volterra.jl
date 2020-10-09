@@ -13,7 +13,22 @@ i.e. the eqn below eqn 11
 				[[gp.base_kernel(t, t, pi, ppi, gp.dpars.u)
 			for ppi in G_pars_sub]
 		for	pi in G_pars_sub])
-end 
+end
+
+function fill_phi_zip(f, ts, Gs, u)
+	reduce(hcat, 
+				[[f(ts[j], ts[i], Gs[j], Gs[i], u)
+			for i in 1:size(ts)[1]]
+		for	j in 1:size(ts)[1]])
+end
+ 
+# function fill_phi_zip_adj(f, ts, Gs, u)
+# 	big_grad = 	reduce(hcat, 
+# 							[[collect(gradient(f, ti, tpi, pi, ppi, u))
+# 						for (tpi, ppi) in zip(ts, Gs)]
+# 					for	(ti, pi) in zip(ts, Gs)])
+# 	big_grad
+# end
 
 """
 makes phi matrix for calculating the cross covariance
@@ -29,10 +44,8 @@ function i.e. the bit inside () just above example 2
 
 	G_pars_sub = [gp.dpars.G[d, i_low+1:i_high, :] ; gp.dpars.G[dp, ip_low+1:ip_high, :]]
 	ts = [fill(t, c) ; fill(tp, cp)]
-	reduce(hcat, 
-				[[gp.base_kernel(ti, tpi, pi, ppi, gp.dpars.u)
-			for (tpi, ppi) in zip(ts, G_pars_sub)]
-		for	(ti, pi) in zip(ts, G_pars_sub)])
+
+	fill_phi_zip(gp.base_kernel, ts, G_pars_sub, gp.dpars.u)
  end 
 
 """
@@ -117,6 +130,6 @@ function kernel(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProces
 	# print("a")
 	# println(cov, " ", E, " ", Ep)
 	# println(cov)
-	cov - E*Ep 
+	cov #- E*Ep 
 end 	
 

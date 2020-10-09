@@ -14,20 +14,20 @@ function diag_blocks!(K, nx, d)
     end 
 end
 
-D = 1
-C = 2
+D = 5
+C = 3
 P = 1
 
-data = Data(collect(0.:0.3:1.), fill(collect(0.:0.01:1.), D))
+data = Data(collect(0.:0.1:2.), fill(collect(0.:0.01:1.), D))
 
-for i in [0.0001, 0.001, 0.01, 0.1, 1.]
+for i in [0.001, 0.01]# , 0.01, 0.1, 1.]
     
     # run with C=2
     Gpars =  i * ones(Float64, (D, sum(1:C), P))
     
     # run with C=1
-    # Gpars = ones(Float64, (D, sum(1:C), P))
-    # Gpars[2, 1, 1] -= i
+    Gpars = ones(Float64, (D, sum(1:C), P))
+    Gpars[2, 1, 1] *= i
 
 
     dpars = DiffableParameters(fill(0.001, D),  Gpars,  [0.001])
@@ -39,7 +39,7 @@ for i in [0.0001, 0.001, 0.01, 0.1, 1.]
     
     K = VolterraGP.fill_K(data.X, data.X, gp) + Σ  + 1e-5 * I
     println("Normal:")
-    println(minimum(eigvals(K)), "\n")
+    println(minimum(real(eigvals(K))), "\n")
 
 
     # diag_blocks!(K, 2, 2)
