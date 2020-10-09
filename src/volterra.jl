@@ -28,11 +28,11 @@ function i.e. the bit inside () just above example 2
 	ip_high = ip_low + cp 
 
 	G_pars_sub = [gp.dpars.G[d, i_low+1:i_high, :] ; gp.dpars.G[dp, ip_low+1:ip_high, :]]
-	
+	ts = [fill(t, c) ; fill(tp, cp)]
 	reduce(hcat, 
-				[[gp.base_kernel(t, tp, pi, ppi, gp.dpars.u)
-			for ppi in G_pars_sub]
-		for	pi in G_pars_sub])
+				[[gp.base_kernel(ti, tpi, pi, ppi, gp.dpars.u)
+			for (tpi, ppi) in zip(ts, G_pars_sub)]
+		for	(ti, pi) in zip(ts, G_pars_sub)])
  end 
 
 """
@@ -81,7 +81,7 @@ function full_E(t::Float64, d::Int64, gp::GaussianProcess)::Float64
 	for c in 1:gp.C
 		if c % 2 == 0
 			phi = get_phi_E(t, c, d, gp)
-			println(kan_rv_prod(phi))
+			# println(kan_rv_prod(phi))
 			val += kan_rv_prod(phi)
 		end
 	end
@@ -96,7 +96,9 @@ function full_cov(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProc
     for c in 1:gp.C
 		for cp in 1:gp.C
 			if (c + cp) % 2 == 0
-            	phi = get_phi_cov(t, tp, c, cp, d, dp, gp)
+				# println(c,cp)
+				phi = get_phi_cov(t, tp, c, cp, d, dp, gp)
+				# println(size(phi))
 				val += kan_rv_prod(phi)
 			end 
 		end 
@@ -113,7 +115,7 @@ function kernel(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProces
     E = full_E(t, d, gp)
 	Ep = full_E(tp, dp, gp)
 	# print("a")
-	println(cov, " ", E, " ", Ep)
+	# println(cov, " ", E, " ", Ep)
 	# println(cov)
 	cov - E*Ep 
 end 	
