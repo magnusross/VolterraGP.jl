@@ -5,28 +5,28 @@ using BenchmarkTools
 
 P = 1
 
-dpars1 = DiffableParameters([0.1], ones(Float64, (1, sum(1:2), P)), [0.1])
 
 X = collect(-1:0.1:1)
-Y = [sin.(X)]
+Y = [sin.(X), cos.(X)]
+
 data = Data(X, Y)
 
-gp1 = GaussianProcess(threeEQs, 1, 2, P, data, dpars1)
 
-dpars2 = DiffableParameters([0.1], ones(Float64, (2, sum(1:1), P)), [0.1])
-gp2 = GaussianProcess(threeEQs, 2, 1, P, data, dpars2)
+dpars = DiffableParameters([0.1, 0.1], ones(Float64, (2, sum(1:1), P)), [0.1])
+gp = GaussianProcess(threeEQs, 2, 1, P, data, dpars)
+
 
 @testset "VolterraGP.jl" begin
-    # @test abs(negloglikelihood(gp) - (-11.65748958085625)) <=  eps()
+    @test negloglikelihood(gp) ≈ 475.6091937696483
 end
 
 @testset "volterra.jl" begin
     # when C=1 running thru volterra should be same as base 
-    @test VolterraGP.kernel(1., 2., 1, 2, gp2) == threeEQs(1., 2., gp2.dpars.G[1, 1, 1], gp2.dpars.G[2, 1, 1], gp2.dpars.u)
-    @test VolterraGP.kernel(1., 2., 1, 1, gp2) == threeEQs(1., 2., gp2.dpars.G[1, 1, 1], gp2.dpars.G[1, 1, 1], gp2.dpars.u)
+    @test VolterraGP.kernel(1., 2., 1, 2, gp) ≈ threeEQs(1., 2., gp.dpars.G[1, 1, 1], gp.dpars.G[2, 1, 1], gp.dpars.u)
+    @test VolterraGP.kernel(1., 2., 1, 1, gp) ≈ threeEQs(1., 2., gp.dpars.G[1, 1, 1], gp.dpars.G[1, 1, 1], gp.dpars.u)
 
-    @test VolterraGP.kan_rv_prod(ones(4, 4)) == 3.
-    @test VolterraGP.kan_rv_prod(ones(2, 2)) == 1.
+    @test VolterraGP.kan_rv_prod(ones(4, 4)) ≈ 3.
+    @test VolterraGP.kan_rv_prod(ones(2, 2)) ≈ 1.
 end
 
 @testset "speed" begin

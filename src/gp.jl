@@ -111,7 +111,7 @@ function posterior(t::Array{Float64}, gp::GaussianProcess; jitter=1e-5)::Tuple{A
 
 	Lop = Loo \ Kop
 	K_post = Kpp - Lop' * Lop
-	
+	K_post = Matrix(Hermitian(K_post))
 	(μ_post, K_post) 
 end
 
