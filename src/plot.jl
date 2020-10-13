@@ -15,7 +15,7 @@ function plotgp(t::Array{Float64}, gp::GaussianProcess;
 
     plot(t, μ_arr, legend=true, layout=gp.D)
     plot!(t, μ_arr + 2 * K_arr, legend=false, lc="red", ls=:dot)
-    plot!(t, μ_arr - 2 * K_arr, legend=false, lc="red")
+    plot!(t, μ_arr - 2 * K_arr, legend=false, lc="red", ls=:dot)
     scatter!(gp.data.X, hcat(gp.data.Y...),
         markershape=:o,
         markercolor="blue",
@@ -42,7 +42,7 @@ function plotgp(t::Array{Float64}, gp::GaussianProcess;
     end
 
     if save !== nothing
-        savefig("/Users/magnus/Documents/phd/code/repos/VolterraGP/bin/plots/$save.pdf")
+        savefig("/Users/magnus/Documents/phd/code/repos/VolterraGP/bin/plots/$save.svg")
     end
     
 end

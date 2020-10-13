@@ -9,3 +9,5 @@ function threeEQs(t::Float64, tp::Float64, Gp1::Float64, Gp2::Float64, bp::Array
 	# ans > eps() ? ans : 0
 	ans
 end 
+
+

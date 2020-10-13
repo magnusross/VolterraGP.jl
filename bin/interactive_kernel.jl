@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.14
+# v0.12.3
 
 using Markdown
 using InteractiveUtils
@@ -19,6 +19,7 @@ begin
 	using VolterraGP
 	using Plots
 	using Distributions
+	using LinearAlgebra
 end
 
 # ╔═╡ 8b6f1218-08b3-11eb-2db7-13b175c26316
@@ -68,11 +69,15 @@ begin
 	GparsC2 = reshape([g1, g2, g3], (1, 3, 1))
 	uparsC2 = [u]
 	yC2 = [k(t, 0., C, GparsC2, uparsC2) for t in τ]
-# 	K = reduce(hcat, [[k(t, tp, C, GparsC2, uparsC2) for t in τ] for tp in τ])
-# 	dist = MvNormal(K)
-# 	samp = rand(dist)
-# 	plot(samp)
 	plot(τ, yC2)
+end
+
+# ╔═╡ 301084ee-0d48-11eb-0fa6-058f6c71c2fe
+begin
+	K = reduce(hcat, [[k(t, tp, C, GparsC2, uparsC2) for t in τ] for tp in τ])
+	dist = MvNormal(K + 1e-5*I)
+	samp = rand(dist)
+	plot(samp)
 end
 
 # ╔═╡ 6be3f44e-08b7-11eb-3827-fbbf2fff84b8
@@ -123,16 +128,17 @@ begin
 end
 
 # ╔═╡ Cell order:
-# ╠═8b6f1218-08b3-11eb-2db7-13b175c26316
-# ╠═e7925da0-08b0-11eb-10d8-e37b1e342978
+# ╟─8b6f1218-08b3-11eb-2db7-13b175c26316
+# ╟─e7925da0-08b0-11eb-10d8-e37b1e342978
 # ╟─20e87940-08b1-11eb-3618-a92d2228cb3a
-# ╠═ab3de578-08b4-11eb-1fe9-2f18a33760a0
+# ╟─ab3de578-08b4-11eb-1fe9-2f18a33760a0
 # ╟─71a180c4-08b7-11eb-09cd-adf1fdfa7f14
 # ╠═adcce676-08b5-11eb-393e-f3e2ed46246a
-# ╟─997768e4-08b6-11eb-1131-9b5ab9222922
-# ╟─9977aba6-08b6-11eb-16bd-fd79436e020a
-# ╟─9977f3e0-08b6-11eb-08f1-f1c92afa2158
-# ╠═40b9b7fe-08b4-11eb-37bc-8ff804c302da
+# ╠═997768e4-08b6-11eb-1131-9b5ab9222922
+# ╠═9977aba6-08b6-11eb-16bd-fd79436e020a
+# ╠═9977f3e0-08b6-11eb-08f1-f1c92afa2158
+# ╟─40b9b7fe-08b4-11eb-37bc-8ff804c302da
+# ╟─301084ee-0d48-11eb-0fa6-058f6c71c2fe
 # ╠═6be3f44e-08b7-11eb-3827-fbbf2fff84b8
 # ╠═d20b4a9e-08b7-11eb-3093-9572d4fdbeca
 # ╠═d34dcca4-08b7-11eb-38b7-21de4471ae2b
