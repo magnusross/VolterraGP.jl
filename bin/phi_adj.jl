@@ -8,9 +8,9 @@ pars = (threeEQs, collect(1.:1.:5.), 0.1 * collect(1.:1.:5.), [0.01])
 
 function fill_test(f, ts, Gs, u)
 	reduce(hcat, 
-				[[f(ts[1], ts[1], pi, ppi, u)
-			for ppi in Gs]
-		for	pi in Gs])
+				[[f(ts[j], ts[i], Gs[j], Gs[i], u)
+			for i in 1:size(ts)[1]]
+		for	j in 1:size(ts)[1]])
 end
 
 function fill_phi_zip(f, ts, Gs, u)
@@ -25,7 +25,7 @@ end
     Gadj = zip_adj_G(f, ts, Gs, u)
     uadj = zip_adj_u(f, ts, Gs, u)
 
-    fill_phi_zip(f, ts, Gs, u), x -> (nothing, nothing,   Gadj * x, uadj * x) 
+    fill_phi_zip(f, ts, Gs, u), Δ -> (nothing, nothing,   Δ .* Gadj, Δ .* uadj) 
 end 
 
 
@@ -69,9 +69,9 @@ end
 ftest(t, tp, Ga, Gb, u) = (Ga + Gb) * (t + tp) + Gb * Ga * (t * tp)^2 + u[1]
 
 # pars = (, [1., 2.], [2., 3.], [5.])
-a = fill_phi_zip(pars...)
-# g = gradient(x -> sum(fill_phi_zip(ftest, [1., 2.], x, [0.1])), [5., 5.])
+# a = fill_phi_zip(pars...)
+@btime gradient(x -> sum(fill_phi_zip(ftest, collect(0.0:0.1:1), x, [0.1])), collect(0.0:0.1:1))
 
-gt = gradient(x -> sum(fill_test(ftest, [1., 2.], x, [0.1])), [5., 5.])
+@btime gradient(x -> sum(fill_test(ftest, collect(0.0:0.1:1), x, [0.1])), collect(0.0:0.1:1))
 
 y, back = Flux.pullback(fill_test, ftest, [1., 2.], [1., 1.], [0.1])

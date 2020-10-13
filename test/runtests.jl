@@ -22,8 +22,8 @@ end
 
 @testset "volterra.jl" begin
     # when C=1 running thru volterra should be same as base 
-    @test VolterraGP.kernel(1., 2., 1, 2, gp2) ≈ threeEQs(1., 2., gp2.dpars.G[1, 1, 1], gp2.dpars.G[2, 1, 1], gp2.dpars.u)
-    @test VolterraGP.kernel(1., 2., 1, 1, gp2) ≈ threeEQs(1., 2., gp2.dpars.G[1, 1, 1], gp2.dpars.G[1, 1, 1], gp2.dpars.u)
+    @test VolterraGP.kernel(1., 2., 1, 2, gp) ≈ threeEQs(1., 2., gp.dpars.G[1, 1, 1], gp.dpars.G[2, 1, 1], gp.dpars.u)
+    @test VolterraGP.kernel(1., 2., 1, 1, gp) ≈ threeEQs(1., 2., gp.dpars.G[1, 1, 1], gp.dpars.G[1, 1, 1], gp.dpars.u)
 
     @test VolterraGP.kan_rv_prod(ones(4, 4)) ≈ 3.
     @test VolterraGP.kan_rv_prod(ones(2, 2)) ≈ 1.

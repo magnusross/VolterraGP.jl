@@ -1,27 +1,32 @@
+function fill_phi(f, ts, Gs, u)
+	s = size(ts)[1] 
+	reduce(hcat, 
+				[[f(ts[j], ts[i], Gs[j], Gs[i], u)
+			for i in 1:s]
+		for	j in 1:s])
+end
+
+
 """
 makes phi matrix for calculating the mean function
 i.e. the eqn below eqn 11
 """
 @views function get_phi_E(t::Float64, c::Int64, d::Int64,
-						 gp::GaussianProcess)::Array{Float64, 2}
-	i_low = sum(1:c-1)
+						 gp::GaussianProcess)::Array{Float64,2}
+	i_low = sum(1:c - 1)
 	i_high = i_low + c
 	
-	G_pars_sub = gp.dpars.G[d, i_low+1:i_high, :]
+	G_pars_sub = gp.dpars.G[d, i_low + 1:i_high, :]
 	
-	reduce(hcat, 
-				[[gp.base_kernel(t, t, pi, ppi, gp.dpars.u)
-			for ppi in G_pars_sub]
-		for	pi in G_pars_sub])
+# 	reduce(hcat, 
+# 				[[gp.base_kernel(t, t, pi, ppi, gp.dpars.u) 
+# 			for ppi in G_pars_sub]
+# 		for	pi in G_pars_sub])
+	ts = fill(t, c)
+	fill_phi(gp.base_kernel, ts, G_pars_sub, gp.dpars.u)
 end
 
-function fill_phi_zip(f, ts, Gs, u)
-	reduce(hcat, 
-				[[f(ts[j], ts[i], Gs[j], Gs[i], u)
-			for i in 1:size(ts)[1]]
-		for	j in 1:size(ts)[1]])
-end
- 
+
 # function fill_phi_zip_adj(f, ts, Gs, u)
 # 	big_grad = 	reduce(hcat, 
 # 							[[collect(gradient(f, ti, tpi, pi, ppi, u))
@@ -30,66 +35,66 @@ end
 # 	big_grad
 # end
 
-"""
+    """
 makes phi matrix for calculating the cross covariance
 function i.e. the bit inside () just above example 2
 """
-@views function get_phi_cov(t::Float64, tp::Float64, c::Int64, cp::Int64, 
-							d::Int64, dp::Int64, gp::GaussianProcess)::Array{Float64, 2}
-	i_low = sum(1:c-1) 
+    @views function get_phi_cov(t::Float64, tp::Float64, c::Int64, cp::Int64, 
+							d::Int64, dp::Int64, gp::GaussianProcess)::Array{Float64,2}
+	i_low = sum(1:c - 1) 
 	i_high = i_low + c
 	
-	ip_low = sum(1:cp-1)
+	ip_low = sum(1:cp - 1)
 	ip_high = ip_low + cp 
 
-	G_pars_sub = [gp.dpars.G[d, i_low+1:i_high, :] ; gp.dpars.G[dp, ip_low+1:ip_high, :]]
+	G_pars_sub = [gp.dpars.G[d, i_low + 1:i_high, :] ; gp.dpars.G[dp, ip_low + 1:ip_high, :]]
 	ts = [fill(t, c) ; fill(tp, cp)]
 
-	fill_phi_zip(gp.base_kernel, ts, G_pars_sub, gp.dpars.u)
- end 
+	fill_phi(gp.base_kernel, ts, G_pars_sub, gp.dpars.u)
+    end 
 
-"""
+    """
 calcultes terms inside the sum for prop one kan 2008, as it was faster this way
 """
-function kan_rv_prod_inner(phi::Array{Float64, 2}, v::NTuple)
+    function kan_rv_prod_inner(phi::Array{Float64,2}, v::NTuple)
 	vl = collect(v)
 	h = 0.5 .- vl
-	hKh =  ( 0.5 * dot(h, phi*h))^(size(phi)[1] / 2)
+	hKh =  ( 0.5 * dot(h, phi * h))^(size(phi)[1] / 2)
 	(-1.0)^(sum(vl)) * hKh 
-end 
+    end 
 
-"""
+    """
 calculates the expectation of products of Gaussian RVs, with
 exponents s and covariance matrix phi, using the identity in proposition 1
 of Kan 2008.
 """
-function kan_rv_prod(phi::Array{Float64, 2})::Float64
+    function kan_rv_prod(phi::Array{Float64,2})::Float64
 	st = size(phi)[1]
 	mapreduce(v -> kan_rv_prod_inner(phi, v), +, Iterators.product(fill(0:1, st)...)) / factorial(st ÷ 2)
-end
+    end
 
-"""
+    """
 this is a custom adjoint for Zygote autodiff
 https://github.com/FluxML/Zygote.jl/issues/292	
 is a bit of a hack and needs properly testing, but seems to work 
 and provided a 10x speedup 
 """
-function kan_rv_prod_adj(phi::Array{Float64, 2})
-    st = size(phi)[1]
-    g = v -> gradient(kan_rv_prod_inner, phi, v)[1]
+    function kan_rv_prod_adj(phi::Array{Float64,2})
+        st = size(phi)[1]
+        g = v -> gradient(kan_rv_prod_inner, phi, v)[1]
 	sum(g, Iterators.product(fill(0:1, st)...)) / factorial(st ÷ 2)
-end
+    end
 
 
 
-@adjoint function kan_rv_prod(phi::Array{Float64, 2})
-    kan_rv_prod(phi), x -> (x * kan_rv_prod_adj(phi),)
-end
+    @adjoint function kan_rv_prod(phi::Array{Float64,2})
+        kan_rv_prod(phi), x -> (x * kan_rv_prod_adj(phi),)
+    end
 
-"""
+    """
 implements eqn 10
 """
-function full_E(t::Float64, d::Int64, gp::GaussianProcess)::Float64
+    function full_E(t::Float64, d::Int64, gp::GaussianProcess)::Float64
 	val = 0.
 	for c in 1:gp.C
 		if c % 2 == 0
@@ -99,14 +104,14 @@ function full_E(t::Float64, d::Int64, gp::GaussianProcess)::Float64
 		end
 	end
 	val 
-end 
+    end 
 
-"""
+    """
 implements eqn 12
 """
-function full_cov(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProcess)::Float64
+    function full_cov(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProcess)::Float64
 	val = 0.
-    for c in 1:gp.C
+        for c in 1:gp.C
 		for cp in 1:gp.C
 			if (c + cp) % 2 == 0
 				# println(c,cp)
@@ -117,19 +122,17 @@ function full_cov(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProc
 		end 
 	end 
 	val 
-end 
+    end 
 
 
-"""
+    """
 implements equation just above section 3.2
 """
 function kernel(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProcess)::Float64
 	cov = full_cov(t, tp, d, dp, gp)
     E = full_E(t, d, gp)
 	Ep = full_E(tp, dp, gp)
-	# print("a")
-	# println(cov, " ", E, " ", Ep)
-	# println(cov)
-	cov #- E*Ep 
+	
+	cov - E*Ep 
 end 	
 
