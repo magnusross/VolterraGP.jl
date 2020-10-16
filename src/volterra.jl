@@ -1,7 +1,7 @@
 function fill_phi(f, ts, Gs, u)
 	s = size(ts)[1] 
 	reduce(hcat, 
-				[[f(ts[j], ts[i], Gs[j], Gs[i], u)
+				[[f(ts[j], ts[i], Gs[j, :], Gs[i, :], u)
 			for i in 1:s]
 		for	j in 1:s])
 end
@@ -23,6 +23,7 @@ i.e. the eqn below eqn 11
 # 			for ppi in G_pars_sub]
 # 		for	pi in G_pars_sub])
 	ts = fill(t, c)
+
 	fill_phi(gp.base_kernel, ts, G_pars_sub, gp.dpars.u)
 end
 
@@ -49,7 +50,6 @@ function i.e. the bit inside () just above example 2
 
 	G_pars_sub = [gp.dpars.G[d, i_low + 1:i_high, :] ; gp.dpars.G[dp, ip_low + 1:ip_high, :]]
 	ts = [fill(t, c) ; fill(tp, cp)]
-
 	fill_phi(gp.base_kernel, ts, G_pars_sub, gp.dpars.u)
 end 
 

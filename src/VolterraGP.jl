@@ -11,7 +11,7 @@ module VolterraGP
 
 	export Data
 	export GaussianProcess, DiffableParameters
-	export negloglikelihood, posterior, threeEQs, plotgp, generate_toy_data, fit! 
+	export negloglikelihood, posterior, threeEQs, scaledEQs, plotgp, generate_toy_data, fit! 
 
 	include("gp.jl")
 	include("GGu.jl")
