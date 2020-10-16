@@ -1,8 +1,9 @@
 const rng = MersenneTwister(1234)
 
 struct Data 
-    X::Array{Float64,1} 
+    X::Array{Array{Float64,1},1} 
     Y::Array{Array{Float64,1},1} 
+    # add check here 
 end
 
 struct DiffableParameters
@@ -55,12 +56,12 @@ end
 """
 get K for all outputs 
 """
-function fill_K(t::Array{Float64}, tp::Array{Float64}, gp::GaussianProcess)
-    reduce(vcat,
+function fill_K(t::Array{Array{Float64,1},1}, tp::Array{Array{Float64,1},1}, gp::GaussianProcess)
+    reduce(hcat,
         map.(dpi -> 
-            reduce(hcat, 
+            reduce(vcat, 
                 map.(di -> 
-                    fill_sub_K(t, tp, di, dpi, gp), 
+                    fill_sub_K(t[di], tp[dpi], di, dpi, gp), 
                  1:gp.D)), 
         1:gp.D))
 end 
@@ -76,14 +77,14 @@ end
 """
 get mean for all outputs 
 """
-function fill_μ(t::Array{Float64}, gp::GaussianProcess)::Array{Float64,1}
-    reduce(vcat, map.(di -> fill_sub_μ(t, di, gp), 1:gp.D))
+function fill_μ(t::Array{Array{Float64,1},1}, gp::GaussianProcess)::Array{Float64,1}
+    reduce(vcat, map.(di -> fill_sub_μ(t[di], di, gp), 1:gp.D))
 end
 
 
-function posterior(t::Array{Float64}, gp::GaussianProcess; jitter=1e-5)::Tuple{Array{Float64,1},Array{Float64,2}}
+function posterior(t::Array{Array{Float64,1},1}, gp::GaussianProcess; jitter=1e-5)::Tuple{Array{Float64,1},Array{Float64,2}}
    
-    Σ = Diagonal(vcat([gp.dpars.σ[i]^2 * ones(size(gp.data.X)[1]) for i in 1:gp.D]...))
+    Σ = Diagonal(vcat([gp.dpars.σ[i]^2 * ones(size(gp.data.X[i])[1]) for i in 1:gp.D]...))
 
     Koo = fill_K(gp.data.X, gp.data.X, gp) + Σ + jitter * I
 
@@ -119,7 +120,7 @@ end
 
 function negloglikelihood(gp::GaussianProcess; jitter=1e-5)::Float64
   
-    Σ = Diagonal(vcat([gp.dpars.σ[i]^2 * ones(size(gp.data.X)[1]) for i in 1:gp.D]...))
+    Σ = Diagonal(vcat([gp.dpars.σ[i]^2 * ones(size(gp.data.X[i])[1]) for i in 1:gp.D]...))
     K = fill_K(gp.data.X, gp.data.X, gp) + Σ + jitter * I
     
     if !ishermitian(K)

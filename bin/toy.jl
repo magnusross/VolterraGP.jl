@@ -13,5 +13,5 @@ println(negloglikelihood(gp))
 
 # gradient(negloglikelihood, gp)
 
-fit!(gp, 30, ls_lr=1e-1, σ_lr=1e-2, show_like=true) # fails when ls_lr > 5e-3
+fit!(gp, 200, ls_lr=5e-2, σ_lr=1e-2, show_like=true) # fails when ls_lr > 5e-3
 plotgp(test.X, gp, samps=true)
