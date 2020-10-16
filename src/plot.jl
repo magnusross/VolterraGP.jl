@@ -13,7 +13,7 @@ function plotgp(t::Array{Float64}, gp::GaussianProcess;
     K_arr = rs(sqrt.(diag(K + jitter * I)))
 
 
-    plot(t, μ_arr, legend=true, layout=gp.D)
+    p = plot(t, μ_arr, legend=true, layout=gp.D)
     plot!(t, μ_arr + 2 * K_arr, legend=false, lc="red", ls=:dot)
     plot!(t, μ_arr - 2 * K_arr, legend=false, lc="red", ls=:dot)
     scatter!(gp.data.X, hcat(gp.data.Y...),
@@ -35,8 +35,7 @@ function plotgp(t::Array{Float64}, gp::GaussianProcess;
         for i = 1:N
             s = rand(dist)
             s = rs(s)
-            p = plot!(t, s, legend=false, lc="gray", lw=0.2)
-            display(p)
+            plot!(t, s, legend=false, lc="gray", lw=0.2)
         end
         
     end
@@ -44,6 +43,6 @@ function plotgp(t::Array{Float64}, gp::GaussianProcess;
     if save !== nothing
         savefig("/Users/magnus/Documents/phd/code/repos/VolterraGP/bin/plots/$save.svg")
     end
-    
+    display(p)
 end
 

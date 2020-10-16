@@ -33,8 +33,8 @@ GaussianProcess(base_kernel, D, C, P, data, dpars) = GaussianProcess(base_kernel
 initialise the differentiable paramters
 """
 function init_dpars(D::Int64, C::Int64, P::Int64)::DiffableParameters
-    G = 0.1 .+ rand(Float64, (D, sum(1:C), P))
-    DiffableParameters(0.01 * rand(D), G, [.1])
+    G = 0.1 * ones(Float64, (D, sum(1:C), P))
+    DiffableParameters(fill(0.3, D), G, [.01])
 end
 
 """
@@ -89,7 +89,7 @@ function posterior(t::Array{Float64}, gp::GaussianProcess; jitter=1e-5)::Tuple{A
 
     if !ishermitian(Koo)
         ∇ = maximum(Koo' - Koo)
-        if ∇ > 5 * eps()
+        if ∇ > sqrt(eps())
             print("WARNING, Hermitian check faliure not rounding error! ", ∇)
         end 
         Koo = Matrix(Hermitian(Koo))
@@ -124,7 +124,7 @@ function negloglikelihood(gp::GaussianProcess; jitter=1e-5)::Float64
     
     if !ishermitian(K)
         ∇ = maximum(K' - K)
-        if ∇ > 5 * eps()
+        if ∇ > sqrt(eps())
             print("WARNING, Hermitian check faliure not rounding error! ", ∇)
         end 
         K = Matrix(Hermitian(K))

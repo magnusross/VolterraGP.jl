@@ -17,7 +17,7 @@ module VolterraGP
 	include("GGu.jl")
 	include("volterra.jl")
 	include("plot.jl")
-	include("data.jl")
+	include("data/load.jl")
 	include("fit.jl")
 end
 

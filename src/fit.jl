@@ -13,7 +13,6 @@ function fit!(gp, its; ls_lr=2e-3, σ_lr=2e-3, show_like=false)
              negloglikelihood(gp)
         end
 
-        println(gp.dpars.G, gp.dpars.σ, gp.dpars.u)
         for p in (gp.dpars.G, gp.dpars.u)
             Flux.Optimise.update!(opt_ls, p, grads[p])
         end
@@ -24,7 +23,11 @@ function fit!(gp, its; ls_lr=2e-3, σ_lr=2e-3, show_like=false)
 
         println("params: ", gp.dpars.G, gp.dpars.σ, gp.dpars.u)
         if show_like
-            print(" negloglike:", negloglikelihood(gp))
+            println(" negloglike:", negloglikelihood(gp))
+        end 
+        
+        if its % 5 == 0
+            plotgp(gp.data.X, gp)
         end 
     end 
 end 

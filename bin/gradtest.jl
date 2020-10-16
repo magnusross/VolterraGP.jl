@@ -32,15 +32,17 @@ end
     kan_rv_prod2(phi), x -> (x * kan_rv_prod2_adj(phi),)
 end
 
-print(gradient(kan_rv_prod, ones((2, 2)))[1] - gradient(kan_rv_prod2, ones((2, 2)))[1])
-
+println(kan_rv_prod2_adj(3 * ones(5, 5)))
+# gradient(kan_rv_prod_inner, ones(2, 2), (1, 0))
+# print(gradient(kan_rv_prod, ones((2, 2)))[1] - gradient(kan_rv_prod2, ones((2, 2)))[1])
+"""
 @btime VolterraGP.kan_rv_prod(ones((5, 5)))
 
 @btime gradient(kan_rv_prod, ones((2, 2)))
 
 @btime gradient(kan_rv_prod2, ones((2, 2)))
 
-
+"""
 # function sum2(op, arr)
 # 	return sum(op, arr)
 # end

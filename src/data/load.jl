@@ -18,8 +18,7 @@ function generate_toy_data(N_train=50)
             y[j] =  quadgk(τ -> conv_ker(X[j] - τ, Sl[i], Pl[i]) * u(τ), 0., X[j])[1]
         end
         y = sum(x -> y.^x, 1:3)
-
-        Y[i] = y + 0.005 * randn(200) * sum(( y .- (sum(y) / 200).^2))
+        Y[i] = y +  randn(200) * sqrt(0.005 * (sum((y .- (sum(y) / 200)).^2) / 200))
     end
 
     mix = randperm(200)
