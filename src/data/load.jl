@@ -3,7 +3,7 @@ Implements toy data from paper
 """
 function generate_toy_data(N_train=50)
 
-    X = collect(0.005:0.005:1.)
+    X = fill(collect(0.005:0.005:1.), 3)
     Y = fill(Float64[], 3)
 
     Sl = [5, 1, 2]
@@ -15,23 +15,25 @@ function generate_toy_data(N_train=50)
     for i in 1:3
         y = fill(0., 200)
         for j in 1:200
-            y[j] =  quadgk(τ -> conv_ker(X[j] - τ, Sl[i], Pl[i]) * u(τ), 0., X[j])[1]
+            y[j] =  quadgk(τ -> conv_ker(X[i][j] - τ, Sl[i], Pl[i]) * u(τ), 0., X[i][j])[1]
         end
         y = sum(x -> y.^x, 1:3)
         Y[i] = y +  randn(200) * sqrt(0.005 * (sum((y .- (sum(y) / 200)).^2) / 200))
     end
 
-    mix = randperm(200)
-    mixtr = sort(mix[1:N_train])
-    mixte = sort(mix[N_train:end])
 
-    train_X = X[mixtr]
-    test_X = X[mixte]
+
+    train_X = fill(Float64[], 3)
+    test_X = fill(Float64[], 3)
     train_Y = fill(Float64[], 3)
     test_Y = fill(Float64[], 3)
     for i in 1:3
+        mix = randperm(200)
+        mixtr = sort(mix[1:N_train])
+        mixte = sort(mix[N_train:end])
  
-
+        train_X[i] = X[i][mixtr]
+        test_X[i] = X[i][mixte]
         train_Y[i] = Y[i][mixtr]
         test_Y[i] = Y[i][mixte]
     end 

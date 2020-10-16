@@ -26,7 +26,7 @@ function fit!(gp, its; ls_lr=2e-3, σ_lr=2e-3, show_like=false)
             println(" negloglike:", negloglikelihood(gp))
         end 
         
-        if its % 5 == 0
+        if its ÷ 5 == 0
             plotgp(gp.data.X, gp)
         end 
     end 

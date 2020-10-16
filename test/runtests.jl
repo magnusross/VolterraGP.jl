@@ -7,12 +7,16 @@ using Flux
 P = 1
 
 
-X = collect(-1:0.1:1)
-Y = [sin.(X), cos.(X)]
+X = [collect(-1:0.1:1), collect(-1:0.1:1)]
+Y = [sin.(X[1]), cos.(X[2])]
 
-t = collect(-1.5:0.3:1.5)
+Xd = [collect(-1:0.1:1), collect(0:0.2:1.5)]
+Yd = [sin.(Xd[1]), cos.(Xd[2])]
+
+t = [collect(-1.5:0.3:1.5), collect(-1.5:0.3:1.5)]
 
 data = Data(X, Y)
+datad = Data(Xd, Yd)
 
 dpars1 = DiffableParameters([0.1, 0.1], ones(Float64, (2, sum(1:1), P)), [0.1])
 gp1 = GaussianProcess(threeEQs, 2, 1, P, data, dpars1)
@@ -24,14 +28,19 @@ gp2 = GaussianProcess(threeEQs, 2, 2, P, data, dpars2)
 dparsrand = DiffableParameters([0.3, 0.4], 0.1 .+ rand(Float64, (2, sum(1:2), P)), [0.1])
 gprand = GaussianProcess(threeEQs, 2, 2, P, data, dparsrand)
 
+gpd = GaussianProcess(threeEQs, 2, 2, P, datad, dpars2)
+
+
 test_psd = K -> minimum(eigvals(K)) > -sqrt(eps())
 test_herm = K -> maximum(K' - K) < sqrt(eps())
 
+# gp3 
 
 
 @testset "VolterraGP.jl" begin
     @test negloglikelihood(gp1) ≈ 475.6091937696483
     @test negloglikelihood(gp2) ≈ 476.28491875918456
+    @test negloglikelihood(gpd) ≈ 48.92347237044826
 end
 
 @testset "volterra.jl" begin
@@ -57,31 +66,17 @@ end
 
 end
 
-@testset "gp.jl" begin
+@testset "gp.jl" begin  
+    for gp in (gp1, gp2, gpd)
 
-    K1 = VolterraGP.fill_K(t, t, gp1)
-    @test test_psd(K1)
-    @test test_herm(K1)
+        K = VolterraGP.fill_K(t, t, gp)
+        μp, Kp = posterior(t, gp)
 
-    K2 = VolterraGP.fill_K(t, t, gp2)
-    @test test_psd(K2)
-    @test test_herm(K2)
-
-    Kr = VolterraGP.fill_K(t, t, gprand)
-    @test test_psd(Kr)
-    @test test_herm(Kr)
-
-    μp1, Kp1 = posterior(t, gp1)
-    @test test_psd(Kp1)
-    @test test_herm(Kp1)
-
-    μp2, Kp2 = posterior(t, gp2)
-    @test test_psd(Kp2)
-    @test test_herm(Kp2)
-
-    μpr, Kpr = posterior(t, gprand)
-    @test test_psd(Kpr)
-    @test test_herm(Kpr)
+        @test test_psd(K)
+        @test test_herm(K)
+        @test test_psd(Kp)
+        @test test_herm(Kp)
+    end
 
 end
 
@@ -92,6 +87,8 @@ end
     g2 = gradient(negloglikelihood, gp2) 
     @test g2 == g2
     gr = gradient(negloglikelihood, gprand) 
+    @test gr == gr
+    gr = gradient(negloglikelihood, gpd) 
     @test gr == gr
 
     # # test custom adjoint 
@@ -109,8 +106,6 @@ end
     # t = gradient(VolterraGP.full_E, 0.1, 1, gp1)
 
     # print(g_custom)
-
-    
 
 end
 
