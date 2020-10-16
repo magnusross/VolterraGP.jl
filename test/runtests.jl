@@ -30,6 +30,8 @@ gprand = GaussianProcess(threeEQs, 2, 2, P, data, dparsrand)
 
 gpd = GaussianProcess(threeEQs, 2, 2, P, datad, dpars2)
 
+dparssca = DiffableParameters([0.1, 0.1], 0.5ones(Float64, (2, sum(1:2), 2)), [0.1])
+gpscaled = GaussianProcess(scaledEQs, 2, 2, P, data, dparssca)
 
 test_psd = K -> minimum(eigvals(K)) > -sqrt(eps())
 test_herm = K -> maximum(K' - K) < sqrt(eps())
@@ -41,12 +43,13 @@ test_herm = K -> maximum(K' - K) < sqrt(eps())
     @test negloglikelihood(gp1) ≈ 475.6091937696483
     @test negloglikelihood(gp2) ≈ 476.28491875918456
     @test negloglikelihood(gpd) ≈ 48.92347237044826
+    @test negloglikelihood(gpscaled) ≈ 477.9933646808806
 end
 
 @testset "volterra.jl" begin
     # when C=1 running thru volterra should be same as base 
-    @test VolterraGP.kernel(1., 2., 1, 2, gp1) ≈ threeEQs(1., 2., gp1.dpars.G[1, 1, 1], gp1.dpars.G[2, 1, 1], gp1.dpars.u)
-    @test VolterraGP.kernel(1., 2., 1, 1, gp1) ≈ threeEQs(1., 2., gp1.dpars.G[1, 1, 1], gp1.dpars.G[1, 1, 1], gp1.dpars.u)
+    @test VolterraGP.kernel(1., 2., 1, 2, gp1) ≈ threeEQs(1., 2., gp1.dpars.G[1, 1, :], gp1.dpars.G[2, 1, :], gp1.dpars.u)
+    @test VolterraGP.kernel(1., 2., 1, 1, gp1) ≈ threeEQs(1., 2., gp1.dpars.G[1, 1, :], gp1.dpars.G[1, 1, :], gp1.dpars.u)
 
     # test for symmerty in kernel arguments 
     @test VolterraGP.kernel(1., 2., 1, 2, gprand) ≈ VolterraGP.kernel(1., 2., 2, 1, gprand)
@@ -67,7 +70,7 @@ end
 end
 
 @testset "gp.jl" begin  
-    for gp in (gp1, gp2, gpd)
+    for gp in (gp1, gp2, gpd, gpscaled)
 
         K = VolterraGP.fill_K(t, t, gp)
         μp, Kp = posterior(t, gp)
@@ -88,7 +91,9 @@ end
     @test g2 == g2
     gr = gradient(negloglikelihood, gprand) 
     @test gr == gr
-    gr = gradient(negloglikelihood, gpd) 
+    gd = gradient(negloglikelihood, gpd) 
+    @test gd == gd
+    gr = gradient(negloglikelihood, gpscaled)
     @test gr == gr
 
     # # test custom adjoint 
