@@ -12,6 +12,7 @@ module VolterraGP
 	export Data
 	export GaussianProcess, DiffableParameters
 	export negloglikelihood, posterior, threeEQs, scaledEQs, plotgp, generate_toy_data, fit! 
+	export NMSE
 
 	include("gp.jl")
 	include("GGu.jl")
@@ -19,6 +20,8 @@ module VolterraGP
 	include("plot.jl")
 	include("data/load.jl")
 	include("fit.jl")
+	include("utils.jl")
+	include("metrics.jl")
 end
 
 

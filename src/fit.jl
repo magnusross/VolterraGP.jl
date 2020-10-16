@@ -1,7 +1,7 @@
 function fit!(gp, its; ls_lr=2e-3, σ_lr=2e-3, show_like=false)
     
-    opt_ls = Flux.ADAM(ls_lr)
-    opt_σ = Flux.ADAM(σ_lr)
+    opt_ls = Flux.NADAM(ls_lr)
+    opt_σ = Flux.NADAM(σ_lr)
 
     for i in 1:its
     # Σ = Diagonal(vcat([gp.dpars.σ[i]^2 * ones(size(gp.data.X)[1]) for i in 1:gp.D]...))
@@ -21,7 +21,7 @@ function fit!(gp, its; ls_lr=2e-3, σ_lr=2e-3, show_like=false)
     
         println("it: ", i)
 
-        println("params: ", gp.dpars.G, gp.dpars.σ, gp.dpars.u)
+        # println("params: ", gp.dpars.G, gp.dpars.σ, gp.dpars.u)
         if show_like
             println(" negloglike:", negloglikelihood(gp))
         end 

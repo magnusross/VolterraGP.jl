@@ -41,3 +41,7 @@ function generate_toy_data(N_train=50)
 
     (Data(train_X, train_Y), Data(test_X, test_Y))
 end     
+
+function load_weather(N_train)
+    
+end 
