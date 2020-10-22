@@ -14,3 +14,5 @@ function split_outputs(y::Array{Float64}, t::Array{Array{Float64,1},1})
     out
 end 
 
+sample_mean(s) = s / size(s)[1]
+sample_std(s) = sqrt(sum((s .- sample_mean(s)).^2) / size(s)[1])
