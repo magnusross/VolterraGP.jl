@@ -8,6 +8,8 @@ module VolterraGP
 	using QuadGK
 	using Flux
 	using Flux:@adjoint
+	using Zygote
+
 
 	export Data
 	export GaussianProcess, DiffableParameters
@@ -22,6 +24,7 @@ module VolterraGP
 	include("fit.jl")
 	include("utils.jl")
 	include("metrics.jl")
+	include("flux_adjoints.jl")
 end
 
 

@@ -16,3 +16,15 @@ end
 
 sample_mean(s) = s / size(s)[1]
 sample_std(s) = sqrt(sum((s .- sample_mean(s)).^2) / size(s)[1])
+
+# function int_to_bit(u)
+#     res = map(parse, bitstring(u))
+#     # res.chunks[1] = u % UInt64
+# end
+
+# function gen_prod(c)
+#     map(x -> int_to_bit(x)[1:c], 1:Int64(2^c - 1))
+# end
+
+
+
