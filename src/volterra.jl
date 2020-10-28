@@ -1,9 +1,17 @@
+# [a + b for a in 1:5, b in 1:3]
 function fill_phi(f, ts, Gs, u)
-	s = size(ts)[1] 
-	reduce(hcat, 
-				[[f(ts[j], ts[i], Gs[j, :], Gs[i, :], u)
-			for i in 1:s]
-		for	j in 1:s])
+	f_u = x -> f(x..., u)
+	@cast ϕ[i, j] := f_u((ts[i], ts[j], Gs[i, :], Gs[j, :]))
+	# mapreduce((tsi, Gsi) -> 
+	# 	mapreduce((tsj, Gsj) -> 
+	# 		f(tsi, tsj, Gsi, Gsj, u), 
+	# 	vcat, ts, Gs), 
+	# hcat, ts, Gs)
+	# reduce(hcat, 
+	# 			[[f(ts[j], ts[i], Gs[j, :], Gs[i, :], u)
+	# 		for i in 1:s]
+	# 	for	j in 1:s])
+	# [f(ts[j], ts[], Gs[j, :], Gs[i, :], u) for i in 1:s, j in 1:s]
 end
 
 
@@ -21,9 +29,8 @@ i.e. the eqn below eqn 11
 # 	reduce(hcat, 
 # 				[[gp.base_kernel(t, t, pi, ppi, gp.dpars.u) 
 # 			for ppi in G_pars_sub]
-# 		for	pi in G_pars_sub])
+# 		for	pi in G_pars_sub])3
 	ts = fill(t, c)
-
 	fill_phi(gp.base_kernel, ts, G_pars_sub, gp.dpars.u)
 end
 
@@ -84,7 +91,6 @@ function kan_rv_prod_adj(phi::Array{Float64,2})
     g = v -> gradient(kan_rv_prod_inner, phi, v)[1]
 	sum(g, Iterators.product(fill(0:1, st)...)) / factorial(st ÷ 2)
 end
-
 
 
 @adjoint function kan_rv_prod(phi::Array{Float64,2})
