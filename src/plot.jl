@@ -1,7 +1,7 @@
 """
 only works when t's all the same for outputs 
 """
-function plotgp(t::Array{Array{Float64,1},1} , gp::GaussianProcess; 
+function plotgp(t::Array{Array{AbstractFloat,1},1} , gp::GaussianProcess; 
                 samps=false, test=nothing, jitter=1e-6, save=nothing)
 
 

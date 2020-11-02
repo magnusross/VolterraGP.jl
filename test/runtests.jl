@@ -18,11 +18,11 @@ t = [collect(-1.5:0.3:1.5), collect(-1.5:0.3:1.5)]
 data = Data(X, Y)
 datad = Data(Xd, Yd)
 
-dpars1 = DiffableParameters([0.1, 0.1], ones(Float64, (2, sum(1:1), P)), [0.1])
+dpars1 = DiffableParameters([0.1, 0.1], ones((2, sum(1:1), P)), [0.1])
 gp1 = GaussianProcess(threeEQs, 2, 1, P, data, dpars1)
 
 
-dpars2 = DiffableParameters([0.1, 0.1], ones(Float64, (2, sum(1:2), P)), [0.1])
+dpars2 = DiffableParameters([0.1, 0.1], ones((2, sum(1:2), P)), [0.1])
 gp2 = GaussianProcess(threeEQs, 2, 2, P, data, dpars2)
 
 dparsrand = DiffableParameters([0.3, 0.4], 0.1 .+ rand(Float64, (2, sum(1:2), P)), [0.1])
@@ -30,7 +30,7 @@ gprand = GaussianProcess(threeEQs, 2, 2, P, data, dparsrand)
 
 gpd = GaussianProcess(threeEQs, 2, 2, P, datad, dpars2)
 
-dparssca = DiffableParameters([0.1, 0.1], 0.5ones(Float64, (2, sum(1:2), 2)), [0.1])
+dparssca = DiffableParameters([0.1, 0.1], 0.5ones((2, sum(1:2), 2)), [0.1])
 gpscaled = GaussianProcess(scaledEQs, 2, 2, P, data, dparssca)
 
 test_psd = K -> minimum(eigvals(K)) > -sqrt(eps())
@@ -56,8 +56,8 @@ end
     @test VolterraGP.kernel(1., 2., 1, 1, gprand) ≈ VolterraGP.kernel(2., 1., 1, 1, gprand)
     
     # examples from paper
-    @test VolterraGP.kan_rv_prod(ones(4, 4)) ≈ 3.
-    @test VolterraGP.kan_rv_prod(ones(2, 2)) ≈ 1.
+    @test VolterraGP.kan_rv_prod(ones(Float64, (4, 4))) ≈ 3.
+    @test VolterraGP.kan_rv_prod(ones(Float64, (2, 2))) ≈ 1.
     
     phi_E = VolterraGP.get_phi_E(0.2, 2, 1, gprand)
     @test test_psd(phi_E)
@@ -97,7 +97,7 @@ end
     @test gr == gr
 
     # # test custom adjoint 
-    # function kan_rv_prod_test(phi::Array{Float64,2})::Float64
+    # function kan_rv_prod_test(phi::Array{AbstractFloat,2})::AbstractFloat
     #     st = size(phi)[1]
     #     # mapreduce(v -> VolterraGP.kan_rv_prod_inner(phi, v), +, Iterators.product(fill(0:1, st)...)) / factorial(st ÷ 2)
     #     1.

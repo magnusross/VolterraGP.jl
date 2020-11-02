@@ -1,27 +1,27 @@
 const rng = MersenneTwister(1234)
 
 struct Data 
-    X::Array{Array{Float64,1},1} 
-    Y::Array{Array{Float64,1},1} 
+    X::Array{Array{<:AbstractFloat,1},1} 
+    Y::Array{Array{<:AbstractFloat,1},1} 
     # add check here 
 end
 
 struct DiffableParameters
-    σ::Array{Float64,1} # measurement noise per output
-    G::Array{Float64,3} # all smoothing kenrel paramters 
-    u::Array{Float64,1} # u kernel paramters
+    σ::Array{<:AbstractFloat,1} # measurement noise per output
+    G::Array{<:AbstractFloat,3} # all smoothing kenrel paramters 
+    u::Array{<:AbstractFloat,1} # u kernel paramters
 end
 
 mutable struct GaussianProcess
     base_kernel::Function
-    D::Int64 # number of outputs 
-    C::Int64 # terms in Volterra series 
-    P::Int64 # Number of paramters in each smoothing kernel
+    D::Int # number of outputs 
+    C::Int # terms in Volterra series 
+    P::Int # Number of paramters in each smoothing kernel
 
     data::Union{Data,Missing} # data to fit 
 
-    μ::Union{Array{Float64,1},Missing} # not used currently 
-    K::Union{Array{Float64,2},Missing} # not used currently 
+    μ::Union{Array{<:AbstractFloat,1},Missing} # not used currently 
+    K::Union{Array{<:AbstractFloat,2},Missing} # not used currently 
     
     dpars::Union{DiffableParameters,Missing} # all the differentiable hyperparamters
 end
@@ -33,7 +33,7 @@ GaussianProcess(base_kernel, D, C, P, data, dpars) = GaussianProcess(base_kernel
 """
 initialise the differentiable paramters
 """
-function init_dpars(D::Int64, C::Int64, P::Int64)::DiffableParameters
+function init_dpars(D::Int, C::Int, P::Int)::DiffableParameters
     G = 0.1 * ones(Float64, (D, sum(1:C), P))
     DiffableParameters(fill(0.3, D), G, [.01])
 end
@@ -41,7 +41,7 @@ end
 """
 get K for one output 
 """
-function fill_sub_K(t::Array{Float64}, tp::Array{Float64}, d::Int64, dp::Int64, gp::GaussianProcess)::Array{Float64,2}
+function fill_sub_K(t::Array{<:AbstractFloat}, tp::Array{<:AbstractFloat}, d::Int, dp::Int, gp::GaussianProcess)
     K  = reduce(hcat,
         map.((tpi -> 
             map.(ti ->
@@ -56,7 +56,7 @@ end
 """
 get K for all outputs 
 """
-function fill_K(t::Array{Array{Float64,1},1}, tp::Array{Array{Float64,1},1}, gp::GaussianProcess)
+function fill_K(t, tp, gp::GaussianProcess)
     reduce(hcat,
         map.(dpi -> 
             reduce(vcat, 
@@ -70,20 +70,19 @@ end
 """
 get mean for one output
 """
-function fill_sub_μ(t::Array{Float64}, d::Int64, gp::GaussianProcess)::Array{Float64,1}
+function fill_sub_μ(t::Array{<:AbstractFloat}, d::Int, gp::GaussianProcess)
 	map.(ti -> full_E(ti, d, gp), t)
 end
 
 """
 get mean for all outputs 
 """
-function fill_μ(t::Array{Array{Float64,1},1}, gp::GaussianProcess)::Array{Float64,1}
+function fill_μ(t, gp::GaussianProcess)
     reduce(vcat, map.(di -> fill_sub_μ(t[di], di, gp), 1:gp.D))
 end
 
 
-function posterior(t::Array{Array{Float64,1},1}, gp::GaussianProcess; jitter=1e-5)::Tuple{Array{Float64,1},Array{Float64,2}}
-   
+function posterior(t, gp::GaussianProcess; jitter=1e-5)
     Σ = Diagonal(vcat([gp.dpars.σ[i]^2 * ones(size(gp.data.X[i])[1]) for i in 1:gp.D]...))
 
     Koo = fill_K(gp.data.X, gp.data.X, gp) + Σ + jitter * I
@@ -118,7 +117,7 @@ end
 
 
 
-function negloglikelihood(gp::GaussianProcess; jitter=1e-5)::Float64
+function negloglikelihood(gp::GaussianProcess; jitter=1e-5)
   
     Σ = Diagonal(vcat([gp.dpars.σ[i]^2 * ones(size(gp.data.X[i])[1]) for i in 1:gp.D]...))
     K = fill_K(gp.data.X, gp.data.X, gp) + Σ + jitter * I
@@ -135,8 +134,7 @@ function negloglikelihood(gp::GaussianProcess; jitter=1e-5)::Float64
     
 
     y = vcat(gp.data.Y...)
-
-    dist = MvNormal(μ, K)
+    dist = MvNormal(Array{Float64,1}(μ), K)
     -1 * logpdf(dist, y)
 end
 
