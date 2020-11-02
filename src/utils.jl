@@ -16,3 +16,5 @@ end
 
 sample_mean(s) = s / size(s)[1]
 sample_std(s) = sqrt(sum((s .- sample_mean(s)).^2) / size(s)[1])
+
+Base.copy(gp::GaussianProcess) = GaussianProcess(gp.base_kernel, gp.D, gp.C, gp.P, gp.data, gp.dpars)

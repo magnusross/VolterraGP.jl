@@ -9,6 +9,7 @@ module VolterraGP
 	using Flux
 	using Flux:@adjoint
 	using TensorCast
+	using Tullio
 
 	export Data
 	export GaussianProcess, DiffableParameters

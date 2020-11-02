@@ -7,9 +7,9 @@ struct Data
 end
 
 struct DiffableParameters
-    σ::Array{<:AbstractFloat,1} # measurement noise per output
-    G::Array{<:AbstractFloat,3} # all smoothing kenrel paramters 
-    u::Array{<:AbstractFloat,1} # u kernel paramters
+    σ::AbstractArray # measurement noise per output
+    G::AbstractArray# all smoothing kenrel paramters 
+    u::AbstractArray # u kernel paramters
 end
 
 mutable struct GaussianProcess
@@ -19,16 +19,14 @@ mutable struct GaussianProcess
     P::Int # Number of paramters in each smoothing kernel
 
     data::Union{Data,Missing} # data to fit 
-
-    μ::Union{Array{<:AbstractFloat,1},Missing} # not used currently 
-    K::Union{Array{<:AbstractFloat,2},Missing} # not used currently 
     
     dpars::Union{DiffableParameters,Missing} # all the differentiable hyperparamters
 end
 
-GaussianProcess(base_kernel, D, C, P ) = GaussianProcess(base_kernel, D, C, P, missing, missing, missing, init_dpars(D, C, P))
-GaussianProcess(base_kernel, D, C, P, data ) = GaussianProcess(base_kernel, D, C, P, data, missing, missing, init_dpars(D, C, P))
-GaussianProcess(base_kernel, D, C, P, data, dpars) = GaussianProcess(base_kernel, D, C, P, data, missing, missing, dpars)
+
+GaussianProcess(base_kernel, D, C, P ) = GaussianProcess(base_kernel, D, C, P, missing, init_dpars(D, C, P))
+GaussianProcess(base_kernel, D, C, P, data ) = GaussianProcess(base_kernel, D, C, P, data, init_dpars(D, C, P))
+
 
 """
 initialise the differentiable paramters
@@ -117,10 +115,10 @@ end
 
 
 
-function negloglikelihood(gp::GaussianProcess; jitter=1e-5)
+function negloglikelihood(gp::GaussianProcess)
   
     Σ = Diagonal(vcat([gp.dpars.σ[i]^2 * ones(size(gp.data.X[i])[1]) for i in 1:gp.D]...))
-    K = fill_K(gp.data.X, gp.data.X, gp) + Σ + jitter * I
+    K = fill_K(gp.data.X, gp.data.X, gp) + Σ + 1e-5 * I
     
     if !ishermitian(K)
         ∇ = maximum(K' - K)
@@ -134,8 +132,14 @@ function negloglikelihood(gp::GaussianProcess; jitter=1e-5)
     
 
     y = vcat(gp.data.Y...)
-    dist = MvNormal(Array{Float64,1}(μ), K)
+    dist = MvNormal(μ, K)
     -1 * logpdf(dist, y)
 end
 
+
+function negloglikelihood(σ::AbstractArray, G::AbstractArray, u::AbstractArray, gp::GaussianProcess)
+    gpn = copy(gp)
+    gpn.dpars = DiffableParameters(σ, G, u)
+    negloglikelihood(gpn)
+end
 
