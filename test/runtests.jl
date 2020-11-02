@@ -31,7 +31,7 @@ gprand = GaussianProcess(threeEQs, 2, 2, P, data, dparsrand)
 gpd = GaussianProcess(threeEQs, 2, 2, P, datad, dpars2)
 
 dparssca = DiffableParameters([0.1, 0.1], 0.5ones(Float64, (2, sum(1:2), 2)), [0.1])
-gpscaled = GaussianProcess(scaledEQs, 2, 2, P, data, dparssca)
+gpscaled = GaussianProcess(VolterraGP.scaledEQs_t, 2, 2, P, data, dparssca)
 
 test_psd = K -> minimum(eigvals(K)) > -sqrt(eps())
 test_herm = K -> maximum(K' - K) < sqrt(eps())

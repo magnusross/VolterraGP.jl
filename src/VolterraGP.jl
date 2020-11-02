@@ -8,7 +8,12 @@ module VolterraGP
 	using QuadGK
 	using Flux
 	using Flux:@adjoint
-	using TensorCast
+	using LoopVectorization
+	using Tullio
+
+	using ForwardDiff
+	using Zygote
+	using Memoize
 
 	export Data
 	export GaussianProcess, DiffableParameters

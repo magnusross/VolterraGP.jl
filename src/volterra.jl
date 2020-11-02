@@ -1,18 +1,18 @@
-# [a + b for a in 1:5, b in 1:3]
-function fill_phi(f, ts, Gs, u)
-	f_u = x -> f(x..., u)
-	@cast ϕ[i, j] := f_u((ts[i], ts[j], Gs[i, :], Gs[j, :]))
-	# mapreduce((tsi, Gsi) -> 
-	# 	mapreduce((tsj, Gsj) -> 
-	# 		f(tsi, tsj, Gsi, Gsj, u), 
-	# 	vcat, ts, Gs), 
-	# hcat, ts, Gs)
-	# reduce(hcat, 
-	# 			[[f(ts[j], ts[i], Gs[j, :], Gs[i, :], u)
-	# 		for i in 1:s]
-	# 	for	j in 1:s])
-	# [f(ts[j], ts[], Gs[j, :], Gs[i, :], u) for i in 1:s, j in 1:s]
-end
+# # [a + b for a in 1:5, b in 1:3]
+# function fill_phi(f, ts, Gs, u)
+# 	f_u = x -> f(x..., u)
+# 	@cast ϕ[i, j] := f_u((ts[i], ts[j], Gs[i, :], Gs[j, :]))
+# 	# mapreduce((tsi, Gsi) -> 
+# 	# 	mapreduce((tsj, Gsj) -> 
+# 	# 		f(tsi, tsj, Gsi, Gsj, u), 
+# 	# 	vcat, ts, Gs), 
+# 	# hcat, ts, Gs)
+# 	# reduce(hcat, 
+# 	# 			[[f(ts[j], ts[i], Gs[j, :], Gs[i, :], u)
+# 	# 		for i in 1:s]
+# 	# 	for	j in 1:s])
+# 	# [f(ts[j], ts[], Gs[j, :], Gs[i, :], u) for i in 1:s, j in 1:s]
+# end
 
 
 """
@@ -24,26 +24,13 @@ i.e. the eqn below eqn 11
 	i_low = sum(1:c - 1)
 	i_high = i_low + c
 	
-	G_pars_sub = gp.dpars.G[d, i_low + 1:i_high, :]
-	
-# 	reduce(hcat, 
-# 				[[gp.base_kernel(t, t, pi, ppi, gp.dpars.u) 
-# 			for ppi in G_pars_sub]
-# 		for	pi in G_pars_sub])3
+	Gs = gp.dpars.G[d, i_low + 1:i_high, :]
 	ts = fill(t, c)
-	fill_phi(gp.base_kernel, ts, G_pars_sub, gp.dpars.u)
+	gp.base_kernel(ts, Gs, gp.dpars.u)
 end
 
 
-# function fill_phi_zip_adj(f, ts, Gs, u)
-# 	big_grad = 	reduce(hcat, 
-# 							[[collect(gradient(f, ti, tpi, pi, ppi, u))
-# 						for (tpi, ppi) in zip(ts, Gs)]
-# 					for	(ti, pi) in zip(ts, Gs)])
-# 	big_grad
-# end
-
-    """
+"""
 makes phi matrix for calculating the cross covariance
 function i.e. the bit inside () just above example 2
 """
@@ -55,12 +42,31 @@ function i.e. the bit inside () just above example 2
 	ip_low = sum(1:cp - 1)
 	ip_high = ip_low + cp 
 
-	G_pars_sub = [gp.dpars.G[d, i_low + 1:i_high, :] ; gp.dpars.G[dp, ip_low + 1:ip_high, :]]
+	Gs = [gp.dpars.G[d, i_low + 1:i_high, :] ; gp.dpars.G[dp, ip_low + 1:ip_high, :]]
 	ts = [fill(t, c) ; fill(tp, cp)]
-	fill_phi(gp.base_kernel, ts, G_pars_sub, gp.dpars.u)
+	gp.base_kernel(ts, Gs, gp.dpars.u)
+	# fill_phi(gp.base_kernel, ts, Gs, gp.dpars.u)
+
 end 
 
-    """
+const hs_fs = Dict{Int, Tuple{Matrix{Float64}, Vector{Float64}}}()
+function get_hs_fs(st)
+    get!(hs_fs, st) do 
+        hs = reduce(hcat, [0.5 .- digits(n, base=2, pad=st) for n in 0:2^st - 1])
+        fs = map(v -> 2iseven(sum(v))-1, [digits(n, base=2, pad=st) for n in 0:2^st-1]) ./ factorial(st ÷ 2)
+        (hs, fs)
+    end
+end
+Zygote.@nograd get_hs_fs
+
+function kan_rv_prod_t(phi)
+	st = size(phi, 1)
+	hs, fs = get_hs_fs(st)
+	@tullio ds[k] := hs[i,k] * phi[i,j] * hs[j,k] nograd=hs
+	@tullio out := fs[k] * sqrt(ds[k])^(st/2) nograd=fs
+end 
+
+"""
 calcultes terms inside the sum for prop one kan 2008, as it was faster this way
 """
 function kan_rv_prod_inner(phi::Array{Float64,2}, v::NTuple)
@@ -97,7 +103,7 @@ end
     kan_rv_prod(phi), x -> (x * kan_rv_prod_adj(phi),)
 end
 
-"""
+    """
 implements eqn 10
 """
 function full_E(t::Float64, d::Int64, gp::GaussianProcess)::Float64
@@ -112,7 +118,7 @@ function full_E(t::Float64, d::Int64, gp::GaussianProcess)::Float64
 	val 
 end
 
-"""
+    """
 implements eqn 12
 """
 function full_cov(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProcess)::Float64
@@ -131,14 +137,14 @@ function full_cov(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProc
 end 
 
 
-"""
+    """
 implements equation just above section 3.2
 """
 function kernel(t::Float64, tp::Float64, d::Int64, dp::Int64, gp::GaussianProcess)::Float64
 	cov = full_cov(t, tp, d, dp, gp)
-    E = full_E(t, d, gp)
+        E = full_E(t, d, gp)
 	Ep = full_E(tp, dp, gp)
 	
-	cov - E*Ep 
+	cov - E * Ep 
 end 	
 

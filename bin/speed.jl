@@ -26,14 +26,18 @@ gp = GaussianProcess(scaledEQs, D, C, P, train)
 # @btime sum(VolterraGP.get_phi_cov(0.1, 0.2, 2, 2, 1, 1, gp))
 # @btime gradient(pars -> sum(VolterraGP.get_phi_cov(pars...)), (0.1, 0.2, 2, 2, 1, 1, gp))
 
-# @btime sum(VolterraGP.fill_phi(gp.base_kernel, ones(4), ones(4, 2), [1., 1.]))
-# @btime gradient(pars -> sum(VolterraGP.fill_phi(pars...)), (gp.base_kernel, ones(4), ones(4, 2), [0.1]))
+#  sum(VolterraGP.fill_phi(gp.base_kernel, ones(4), ones(4, 2), [1., 1.]))
+# @btime gradient(pars -> sum(VolterraGP.fill_phi(pars...)),] (gp.base_kernel, ones(4), ones(4, 2), [0.1]))
 
 
-# phi = VolterraGP.get_phi_cov(0.1, 0.2, 2, 2, 1, 1, gp)
+phi = VolterraGP.get_phi_cov(0.1, 0.2, 2, 2, 1, 1, gp)
 
-# @btime VolterraGP.kan_rv_prod(phi)
-# @btime gradient(VolterraGP.kan_rv_prod, phi)
+# VolterraGP.kan(phi)
+VolterraGP.kan_rv_prod_t(phi)
+# @btime VolterraGP.kan_rv_prod_2(phi)
+gradient(VolterraGP.kan_rv_prod_t, phi)
+# gradient(VolterraGP.kan_rv_prod_t, phi)
+
 
 # @btime VolterraGP.scaledEQs(0.1, 0.2, ones(2), ones(2), [1.])
 # @btime gradient(VolterraGP.scaledEQs, 0.1, 0.2, ones(2), ones(2), [1.])
@@ -44,6 +48,6 @@ gp = GaussianProcess(scaledEQs, D, C, P, train)
 # function sig_like(sig, gp)
 #     gp.dpars.σ = sig
 #     negloglikelihood(gp)
-# end
+# en
 # a = Zygote.forward_jacobian(x -> sig_like(x, gp), ones(3))
 # f = x -> x' * x
