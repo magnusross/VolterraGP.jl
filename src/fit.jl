@@ -1,4 +1,11 @@
-function fit!(gp, its; ls_lr=2e-3, σ_lr=2e-3, show_like=false)
+function fwd_grad_like(gp)
+    dσ = ForwardDiff.gradient(x -> negloglikelihood(x, gp.dpars.G, gp.dpars.u, gp), gp.dpars.σ)
+    dG = ForwardDiff.gradient(x -> negloglikelihood(gp.dpars.σ, x, gp.dpars.u, gp), gp.dpars.G)
+    du = ForwardDiff.gradient(x -> negloglikelihood(gp.dpars.σ, gp.dpars.G, x, gp), gp.dpars.u)
+    (dσ, dG, du)
+end 
+
+function fit!(gp, its; fwd=true, ls_lr=2e-3, σ_lr=2e-3, show_like=false)
     
     opt_ls = Flux.NADAM(ls_lr)
     opt_σ = Flux.NADAM(σ_lr)
@@ -8,16 +15,25 @@ function fit!(gp, its; ls_lr=2e-3, σ_lr=2e-3, show_like=false)
     # B = VolterraGP.fill_K(gp.data.X, gp.data.X, gp) + Σ + 1e-5 * I
     # println(sort(eigvals(B)))
     # println(maximum(B' - /B))
+        if fwd
+            grads = fwd_grad_like(gp)
 
-        grads = gradient(Flux.params(gp.dpars.σ, gp.dpars.G, gp.dpars.u)) do
-             negloglikelihood(gp)
-        end
+            Flux.Optimise.update!(opt_σ, gp.dpars.σ, grads[1])
+            Flux.Optimise.update!(opt_ls, gp.dpars.G, grads[2])
+            Flux.Optimise.update!(opt_ls, gp.dpars.u, grads[3])
+            
+        else #use reverse diff 
+            grads = Flux.gradient(Flux.params(gp.dpars.σ, gp.dpars.G, gp.dpars.u)) do
+                negloglikelihood(gp)
+            end
 
-        for p in (gp.dpars.G, gp.dpars.u)
-            Flux.Optimise.update!(opt_ls, p, grads[p])
-        end
+           for p in (gp.dpars.G, gp.dpars.u)
+               Flux.Optimise.update!(opt_ls, p, grads[p])
+           end
+   
+            Flux.Optimise.update!(opt_σ, gp.dpars.σ, grads[gp.dpars.σ])
+        end 
 
-        Flux.Optimise.update!(opt_σ, gp.dpars.σ, grads[gp.dpars.σ])
     
         println("it: ", i)
 

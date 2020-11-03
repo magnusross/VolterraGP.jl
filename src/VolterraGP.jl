@@ -8,6 +8,7 @@ module VolterraGP
 	using QuadGK
 	using Flux
 	using Flux:@adjoint
+	using ForwardDiff
 	using TensorCast
 	using Tullio
 

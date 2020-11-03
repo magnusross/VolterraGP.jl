@@ -96,36 +96,17 @@ end
     gr = gradient(negloglikelihood, gpscaled)
     @test gr == gr
 
-    # # test custom adjoint 
-    # function kan_rv_prod_test(phi::Array{AbstractFloat,2})::AbstractFloat
-    #     st = size(phi)[1]
-    #     # mapreduce(v -> VolterraGP.kan_rv_prod_inner(phi, v), +, Iterators.product(fill(0:1, st)...)) / factorial(st ÷ 2)
-    #     1.
-    # end
+    # test forward vs reverse gradients 
+    g_fwd = VolterraGP.fwd_grad_like(gpscaled)
+    g_bwd = Flux.gradient(Flux.params(gpscaled.dpars.σ, gpscaled.dpars.G, gpscaled.dpars.u)) do
+        negloglikelihood(gpscaled)
+    end
 
+    
+    @test all(g_bwd[gpscaled.dpars.σ] .≈ g_fwd[1])
+    @test all(g_bwd[gpscaled.dpars.G] .≈ g_fwd[2])
+    @test all(g_bwd[gpscaled.dpars.u] .≈ g_fwd[3])
 
-    # phi = ones(4, 4)
-
-    # g_custom = gradient(VolterraGP.kan_rv_prod, phi)
-    # g_test = gradient(kan_rv_prod_test,  phi)
-    # t = gradient(VolterraGP.full_E, 0.1, 1, gp1)
-
-    # print(g_custom)
 
 end
 
-
-@testset "speed" begin
-
-    # like_allocs = (@timed negloglikelihood(gp))[3]
-    # grad_allocs = (@timed gradient(Flux.params(gp.dpars.σ, gp.dpars.G, gp.dpars.u)) do
-    #     negloglikelihood(gp)
-    # end)[3]
-    # best_like, best_grad = readlines("test/best_allocs.txt")
-    
-    # @test like_allocs <= parse(Int64, best_like)*1.05
-    # @test grad_allocs <= parse(Int64, best_grad)*1.05
-    
-
- 
-end

@@ -92,7 +92,6 @@ function kan_rv_prod_adj(phi::Array{<:AbstractFloat,2})
 	sum(g, Iterators.product(fill(0:1, st)...)) / factorial(st ÷ 2)
 end
 
-
 @adjoint function kan_rv_prod(phi::Array{<:AbstractFloat,2})
     kan_rv_prod(phi), x -> (x * kan_rv_prod_adj(phi),)
 end
@@ -106,8 +105,6 @@ function get_hs_fs(st)
         (hs, fs)
     end
 end
-
-
 
 function kan_rv_prod_t(phi)
 	st = size(phi, 1)
