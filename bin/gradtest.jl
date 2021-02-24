@@ -1,7 +1,7 @@
 using Flux
 using Flux:@adjoint
 
-function kan_rv_prod_inner(phi::Array{Float64,2}, v::NTuple)
+function kan_rv_prod_inner(phi::Array{AbstractFloat,2}, v::NTuple)
 	vl = collect(v)
 	h = 0.5 .- vl
 	hKh =  ( 0.5 * dot(h, phi * h))^(size(phi)[1] / 2)

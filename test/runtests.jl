@@ -18,11 +18,11 @@ t = [collect(-1.5:0.3:1.5), collect(-1.5:0.3:1.5)]
 data = Data(X, Y)
 datad = Data(Xd, Yd)
 
-dpars1 = DiffableParameters([0.1, 0.1], ones(Float64, (2, sum(1:1), P)), [0.1])
+dpars1 = DiffableParameters([0.1, 0.1], ones((2, sum(1:1), P)), [0.1])
 gp1 = GaussianProcess(threeEQs, 2, 1, P, data, dpars1)
 
 
-dpars2 = DiffableParameters([0.1, 0.1], ones(Float64, (2, sum(1:2), P)), [0.1])
+dpars2 = DiffableParameters([0.1, 0.1], ones((2, sum(1:2), P)), [0.1])
 gp2 = GaussianProcess(threeEQs, 2, 2, P, data, dpars2)
 
 dparsrand = DiffableParameters([0.3, 0.4], 0.1 .+ rand(Float64, (2, sum(1:2), P)), [0.1])
@@ -30,7 +30,7 @@ gprand = GaussianProcess(threeEQs, 2, 2, P, data, dparsrand)
 
 gpd = GaussianProcess(threeEQs, 2, 2, P, datad, dpars2)
 
-dparssca = DiffableParameters([0.1, 0.1], 0.5ones(Float64, (2, sum(1:2), 2)), [0.1])
+dparssca = DiffableParameters([0.1, 0.1], 0.5ones((2, sum(1:2), 2)), [0.1])
 gpscaled = GaussianProcess(scaledEQs, 2, 2, P, data, dparssca)
 
 test_psd = K -> minimum(eigvals(K)) > -sqrt(eps())
@@ -56,8 +56,8 @@ end
     @test VolterraGP.kernel(1., 2., 1, 1, gprand) ≈ VolterraGP.kernel(2., 1., 1, 1, gprand)
     
     # examples from paper
-    @test VolterraGP.kan_rv_prod(ones(4, 4)) ≈ 3.
-    @test VolterraGP.kan_rv_prod(ones(2, 2)) ≈ 1.
+    @test VolterraGP.kan_rv_prod(ones(Float64, (4, 4))) ≈ 3.
+    @test VolterraGP.kan_rv_prod(ones(Float64, (2, 2))) ≈ 1.
     
     phi_E = VolterraGP.get_phi_E(0.2, 2, 1, gprand)
     @test test_psd(phi_E)
@@ -96,36 +96,17 @@ end
     gr = gradient(negloglikelihood, gpscaled)
     @test gr == gr
 
-    # # test custom adjoint 
-    # function kan_rv_prod_test(phi::Array{Float64,2})::Float64
-    #     st = size(phi)[1]
-    #     # mapreduce(v -> VolterraGP.kan_rv_prod_inner(phi, v), +, Iterators.product(fill(0:1, st)...)) / factorial(st ÷ 2)
-    #     1.
-    # end
+    # test forward vs reverse gradients 
+    g_fwd = VolterraGP.fwd_grad_like(gpscaled)
+    g_bwd = Flux.gradient(Flux.params(gpscaled.dpars.σ, gpscaled.dpars.G, gpscaled.dpars.u)) do
+        negloglikelihood(gpscaled)
+    end
 
+    
+    @test all(g_bwd[gpscaled.dpars.σ] .≈ g_fwd[1])
+    @test all(g_bwd[gpscaled.dpars.G] .≈ g_fwd[2])
+    @test all(g_bwd[gpscaled.dpars.u] .≈ g_fwd[3])
 
-    # phi = ones(4, 4)
-
-    # g_custom = gradient(VolterraGP.kan_rv_prod, phi)
-    # g_test = gradient(kan_rv_prod_test,  phi)
-    # t = gradient(VolterraGP.full_E, 0.1, 1, gp1)
-
-    # print(g_custom)
 
 end
 
-
-@testset "speed" begin
-
-    # like_allocs = (@timed negloglikelihood(gp))[3]
-    # grad_allocs = (@timed gradient(Flux.params(gp.dpars.σ, gp.dpars.G, gp.dpars.u)) do
-    #     negloglikelihood(gp)
-    # end)[3]
-    # best_like, best_grad = readlines("test/best_allocs.txt")
-    
-    # @test like_allocs <= parse(Int64, best_like)*1.05
-    # @test grad_allocs <= parse(Int64, best_grad)*1.05
-    
-
- 
-end
